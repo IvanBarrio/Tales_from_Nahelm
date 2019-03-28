@@ -7,51 +7,41 @@ public class CameraController : MonoBehaviour
 
     //Falta afegir el moviment de rotació de la camara per a les tecles "q" i "e"
 
-    float mainSpeed = 100.0f;   //Velocitat de moviment de la camara
+    float mainSpeed = 50.0f;   //Velocitat de moviment de la camara
     float shiftAdd = 250.0f;    //Multiplicat per el temps que s'ha apretat el shift
     float maxShift = 1000.0f;
-    float camSens = 0.25f;
-    private Vector3 lastMouse = new Vector3(255, 255, 255);
     private float totalRun = 1.0f;
+    public GameObject target;   //Target de la camara sobre el qual rotará
+    Vector3 point;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        point = target.transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
         
-        float f = 0.0f;
+        //Codi per moure la camara
         Vector3 p = GetBaseInput();
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
-            totalRun += Time.deltaTime;
-            p = p * totalRun * shiftAdd;
-            p.x = Mathf.Clamp(p.x, -maxShift, maxShift);
-            p.y = Mathf.Clamp(p.y, -maxShift, maxShift);
-            p.z = Mathf.Clamp(p.z, -maxShift, maxShift);
-        }
-        else
-        {
-            totalRun = Mathf.Clamp(totalRun * 0.5f, 1f, 1000f);
-            p = p * mainSpeed;
-        }
+        
+        totalRun = Mathf.Clamp(totalRun * 0.5f, 1f, 1000f);
+        p = p * mainSpeed;
 
         p = p * Time.deltaTime;
         Vector3 newPosition = transform.position;
-        if (Input.GetKey(KeyCode.Space))
+        transform.Translate(p);
+
+        //Codi per rotar la camara en cas que es presionin les tecles 'Q' o 'E'
+        if (Input.GetKey(KeyCode.Q))
         {
-            transform.Translate(p);
-            newPosition.x = transform.position.x;
-            newPosition.z = transform.position.z;
-            transform.position = newPosition;
+            transform.RotateAround(point, new Vector3(0.0f, 1.0f, 0.0f), 20 * Time.deltaTime * 10.0f);
         }
-        else
+        if (Input.GetKey(KeyCode.E))
         {
-            transform.Translate(p);
+            transform.RotateAround(point, new Vector3(0.0f, -1.0f, 0.0f), 20 * Time.deltaTime * 10.0f);
         }
 
     }
@@ -59,19 +49,19 @@ public class CameraController : MonoBehaviour
     private Vector3 GetBaseInput()
     {
         Vector3 p_Velocity = new Vector3();
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+        if (Input.GetKey(KeyCode.W))
         {
             p_Velocity += new Vector3(0, 0, 1);
         }
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+        if (Input.GetKey(KeyCode.S))
         {
             p_Velocity += new Vector3(0, 0, -1);
         }
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        if (Input.GetKey(KeyCode.A))
         {
             p_Velocity += new Vector3(-1, 0, 0);
         }
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.D))
         {
             p_Velocity += new Vector3(1, 0, 0);
         }
