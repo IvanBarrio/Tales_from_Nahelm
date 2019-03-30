@@ -6,6 +6,8 @@ public class Character : MonoBehaviour
 {
     private string charName;            //Nom del personatge
     private string charClass;           //Classe del personatge
+    private int lvl;                    //Nivell actual del personatge
+    private int exp;                    //Experiencia actual del personatge
     private int pv;                     //Punts de vitalitat del personatge
     private int str;                    //Força del personatge
     private int mag;                    //Magia del personatge
@@ -17,15 +19,17 @@ public class Character : MonoBehaviour
     private int mov;                    //Moviment del personatge
     private Weapon equipedWeapon;       //Arma equipada
     private GameObject[] inventory;     //Motxilla del personatge
+    private int actualPV;               //Valor actual dels punts de vida del personatge
 
     //Funció inicialitzadora del personatge
-    public void createCharacter(string tag, string cn, string cc, int pv, int str, int mag, int skl, int spd, int lck, int def, int res, int mov)
+    public void createCharacter(string tag, string cn, string cc, int pv, int str, int mag, int skl, int spd, int lck, int def, int res, int mov, int lvl)
     {
         this.gameObject.tag = tag;  //Definim quin tipus de personatge és (Aliat, enemic o neutral)
         //definim la resta de caracteristiques del personatge
         charName = cn;
         charClass = cc;
         this.pv = pv;
+        this.actualPV = pv;
         this.str = str;
         this.mag = mag;
         this.skl = skl;
@@ -34,7 +38,9 @@ public class Character : MonoBehaviour
         this.def = def;
         this.res = res;
         this.mov = mov;
-
+        this.lvl = lvl;
+        //Tots els personatges començarán sense experiencia
+        this.exp = 0;
     }
 
     // Update is called once per frame
@@ -62,7 +68,7 @@ public class Character : MonoBehaviour
         int triangleWeaponExtra = 0;                                                    //Bonificació de dany de l'arma respecte la de l'enemic
         int triangleWeaponHit = 0;                                                      //Bonificació d'encert al cop de l'arma respecte la de l'enemic
         int critical = 1;                                                               //Multiplicador aplicable depenent si es realitza atac crític o no
-        double critprob = 0;  //Probabilitat de realitzar un atac crític
+        double critprob = 0;                                                            //Probabilitat de realitzar un atac crític
         double atkProb = 0;                                                             //Probabilitat de realitzar l'atac si no és critic
         bool isAHit = false;                                                            //Variable que indica si s'encerta el cop a realitzar
         int randV;                                                                      //Valor aleatori tret per a les comprovacions de les realitzacions dels diferent atacs
@@ -134,4 +140,21 @@ public class Character : MonoBehaviour
         double evasion = ((spd * 3) + lck) / 2;
         return evasion;
     }
+
+    public void printStats()
+    {
+        Debug.Log("HP: " + pv);
+    }
+
+    public void OnMouseDown()
+    {
+        
+        //GameObject.FindWithTag("GameController").GetComponent<GameController>().disableUnit();
+    }
+
+    /*
+     * ToDo:
+     *  -Funció de moviment
+     *  -Funció per pujar de nivell
+     */
 }

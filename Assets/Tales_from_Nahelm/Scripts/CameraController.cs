@@ -34,6 +34,8 @@ public class CameraController : MonoBehaviour
         Vector3 newPosition = transform.position;
         transform.Translate(p);
 
+        point = target.transform.position;
+
         //Codi per rotar la camara en cas que es presionin les tecles 'Q' o 'E'
         if (Input.GetKey(KeyCode.Q))
         {
@@ -42,6 +44,15 @@ public class CameraController : MonoBehaviour
         if (Input.GetKey(KeyCode.E))
         {
             transform.RotateAround(point, new Vector3(0.0f, -1.0f, 0.0f), 20 * Time.deltaTime * 10.0f);
+        }
+        //Codi per al Zoom de la camara
+        if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        {
+            Camera.main.orthographicSize = Mathf.Max(Camera.main.orthographicSize - 1, 10);
+        }
+        if (Input.GetAxis("Mouse ScrollWheel") < 0)
+        {
+            Camera.main.orthographicSize = Mathf.Min(Camera.main.orthographicSize + 1, 30);
         }
 
     }
