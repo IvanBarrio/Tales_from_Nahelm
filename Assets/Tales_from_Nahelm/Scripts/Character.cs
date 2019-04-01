@@ -18,7 +18,7 @@ public class Character : MonoBehaviour
     private int res;                    //Resistencia del personatge
     private int mov;                    //Moviment del personatge
     private Weapon equipedWeapon;       //Arma equipada
-    private GameObject[] inventory;     //Motxilla del personatge
+    private Object[] inventory;     //Motxilla del personatge
     private int actualPV;               //Valor actual dels punts de vida del personatge
 
     //Funció inicialitzadora del personatge
@@ -39,6 +39,7 @@ public class Character : MonoBehaviour
         this.res = res;
         this.mov = mov;
         this.lvl = lvl;
+        inventory = new GameObject[5];
         //Tots els personatges començarán sense experiencia
         this.exp = 0;
     }
@@ -48,11 +49,35 @@ public class Character : MonoBehaviour
     {
         
     }
-    
+
+    //Setters
+    public void setWeapon(Weapon w)
+    {
+        equipedWeapon = w;
+    }
+
     //Getters
     public int getDef()
     {
         return def;
+    }
+
+    public int getSpd()
+    {
+        return spd;
+    }
+
+    public int getPV()
+    {
+        return pv;
+
+    }
+
+    public int recieveDamage(int damageDealt)
+    {
+        pv -= damageDealt;
+        if (pv < 0) pv = 0;
+        return pv;
     }
 
     public Weapon getEquipedWeapon()
@@ -61,17 +86,20 @@ public class Character : MonoBehaviour
     }
 
     //Funció per obtenir el resultat del dany realitzat a un enemic
-    public double atackSelectedEnemy(Character enemy)
+    public int[] atackSelectedEnemy(Character enemy)
     {
-        double damageYouCanDeal = 0;                                                    //Dany total que pot realitzar el personatge
-        double damageToEnemy = 0;                                                       //Dany total que pot realitzar el personatge contra l'enemic seleccionat
+        int damageYouCanDeal = 0;                                                    //Dany total que pot realitzar el personatge
+        int damageToEnemy = 0;                                                       //Dany total que pot realitzar el personatge contra l'enemic seleccionat
         int triangleWeaponExtra = 0;                                                    //Bonificació de dany de l'arma respecte la de l'enemic
         int triangleWeaponHit = 0;                                                      //Bonificació d'encert al cop de l'arma respecte la de l'enemic
-        int critical = 1;                                                               //Multiplicador aplicable depenent si es realitza atac crític o no
         double critprob = 0;                                                            //Probabilitat de realitzar un atac crític
-        double atkProb = 0;                                                             //Probabilitat de realitzar l'atac si no és critic
-        bool isAHit = false;                                                            //Variable que indica si s'encerta el cop a realitzar
-        int randV;                                                                      //Valor aleatori tret per a les comprovacions de les realitzacions dels diferent atacs
+        int atkProb = 0;                                                             //Probabilitat de realitzar l'atac si no és critic
+        int[] dealtStats = new int[3];                                            //Valors que es retornen per a la realització de l'atac 
+        /*
+         * Pos 0 -> Percentatge d'encert
+         * Pos 1 -> Dany realitzat en cas d'encert
+         * Pos 2 -> Percentatge d'activació d'atac crític
+         */
 
         //Comprovem les efectivitats de les armes avans de calcular res
         if (equipedWeapon.isEffectiveAgainst(enemy.getEquipedWeapon()))
@@ -85,59 +113,39 @@ public class Character : MonoBehaviour
             triangleWeaponHit = -5;
         }
 
-        //Es realitza un atac crític?
-        critprob = ((skl * 0.5) + equipedWeapon.getCrit() - enemy.evadeCrit());
-        randV = Random.Range(1, 100);
-        if (randV <= critprob && randV != 0)
-        {
-            critical = 3;
-            isAHit = true;
-        }
+        //Comprovem la provabilitat de critic
+        critprob = ((skl * 0.5f) + equipedWeapon.getCrit()) - enemy.evadeCrit();
+        dealtStats[2] = (int) critprob;
 
-        //Si l'atac és critic acerta sempre!
-        //Si l'atac no és critic
-        if (critical == 1)
-        {
-            //Es realitza l'atac normal?
-            atkProb = (((skl * 3) + lck) / 2 + equipedWeapon.getHit() + triangleWeaponHit) - enemy.getEvasion();
-            randV = Random.Range(1, 100);
-            if (randV <= atkProb && randV != 0)
-            {
-                isAHit = true;
-            }
-        }
+        //SCalculem la probabilitat d'encert
+        atkProb = (((skl * 3) + lck) / 2 + equipedWeapon.getHit() + triangleWeaponHit) - enemy.getEvasion();
+        dealtStats[0] = atkProb;
 
-        if (isAHit)
+        if (equipedWeapon.getType().Equals("Sword") || equipedWeapon.getType().Equals("Axe") || equipedWeapon.getType().Equals("Lance") || equipedWeapon.getType().Equals("Bow"))
         {
-            if (equipedWeapon.getType().Equals("Sword") || equipedWeapon.getType().Equals("Axe") || equipedWeapon.getType().Equals("Lance") || equipedWeapon.getType().Equals("Bow"))
-            {
-                damageYouCanDeal = str + equipedWeapon.getAtk() + triangleWeaponExtra;
-            }
-            else
-            {
-                damageYouCanDeal = mag + equipedWeapon.getAtk() + triangleWeaponExtra;
-            }
-
-            damageToEnemy = (damageYouCanDeal - enemy.getDef()) * critical;
+            damageYouCanDeal = str + equipedWeapon.getAtk() + triangleWeaponExtra;
         }
         else
         {
-            //Si ha fallat l'atac retornem un negatiu per a informar-ho
-            damageToEnemy = -1;
+            damageYouCanDeal = mag + equipedWeapon.getAtk() + triangleWeaponExtra;
         }
-        return damageToEnemy;
+
+        damageToEnemy = (damageYouCanDeal - enemy.getDef());
+        dealtStats[1] = damageToEnemy;
+
+        return dealtStats;
     }
 
     //Funció que proporciona la evasió a atacs critics cap al personatge
-    public double evadeCrit()
+    public int evadeCrit()
     {
         return lck;
     }
 
     //Funció per obtenir la evasió a un atac normal
-    public double getEvasion()
+    public int getEvasion()
     {
-        double evasion = ((spd * 3) + lck) / 2;
+        int evasion = ((spd * 3) + lck) / 2;
         return evasion;
     }
 
@@ -146,15 +154,8 @@ public class Character : MonoBehaviour
         Debug.Log("HP: " + pv);
     }
 
-    public void OnMouseDown()
-    {
-        
-        //GameObject.FindWithTag("GameController").GetComponent<GameController>().disableUnit();
-    }
-
     /*
      * ToDo:
-     *  -Funció de moviment
      *  -Funció per pujar de nivell
      */
 }
