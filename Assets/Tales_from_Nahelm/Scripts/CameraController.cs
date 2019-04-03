@@ -8,8 +8,6 @@ public class CameraController : MonoBehaviour
     //Falta afegir el moviment de rotació de la camara per a les tecles "q" i "e"
 
     float mainSpeed = 50.0f;   //Velocitat de moviment de la camara
-    float shiftAdd = 250.0f;    //Multiplicat per el temps que s'ha apretat el shift
-    float maxShift = 1000.0f;
     private float totalRun = 1.0f;
     public GameObject target;   //Target de la camara sobre el qual rotará
     Vector3 point;

@@ -18,8 +18,9 @@ public class Character : MonoBehaviour
     private int res;                    //Resistencia del personatge
     private int mov;                    //Moviment del personatge
     private Weapon equipedWeapon;       //Arma equipada
-    private Object[] inventory;     //Motxilla del personatge
+    private Object[] inventory;         //Motxilla del personatge
     private int actualPV;               //Valor actual dels punts de vida del personatge
+    private char state;                 //Estat del personatge      A -> Actiu | M -> Mogut | D -> Mort
 
     //Funció inicialitzadora del personatge
     public void createCharacter(string tag, string cn, string cc, int pv, int str, int mag, int skl, int spd, int lck, int def, int res, int mov, int lvl)
@@ -39,6 +40,7 @@ public class Character : MonoBehaviour
         this.res = res;
         this.mov = mov;
         this.lvl = lvl;
+        this.state = 'A';
         inventory = new GameObject[5];
         //Tots els personatges començarán sense experiencia
         this.exp = 0;
@@ -56,6 +58,11 @@ public class Character : MonoBehaviour
         equipedWeapon = w;
     }
 
+    public void setState(char state)
+    {
+        this.state = state;
+    }
+
     //Getters
     public int getDef()
     {
@@ -71,6 +78,11 @@ public class Character : MonoBehaviour
     {
         return pv;
 
+    }
+
+    public char getState()
+    {
+        return state;
     }
 
     public int recieveDamage(int damageDealt)

@@ -12,6 +12,10 @@ public class GameController : MonoBehaviour
     private string selectedCharacter;   //Variable que ens indica quin personatge esta seleccionat en cas d'estar-ho, sino es trobara un valor vuit.
     Vector3 initialmovementPoint;
     Vector3 destination;
+    bool flagIA;                        //Bolea que indicara si ha acabat el torn d'una unitat de la IA o encara no
+    GameObject selAICharacter;
+    GameObject enemyTarget;             //Unitat seleccionada per atacar
+    bool isNotMoving;
 
     // Start is called before the first frame update
     void Start()
@@ -123,7 +127,7 @@ public class GameController : MonoBehaviour
                             if (Physics.Raycast(ray, out hit))
                             {
                                 //Si pulsem sobre una unitat del jugador en el torn del jugador passem a comprobar si es el torn de la IA i al reves
-                                if (hit.collider.tag == "Ally")
+                                if (hit.collider.tag == "Ally" && GameObject.Find(hit.collider.name).GetComponent<Character>().getState() == 'A')
                                 {
                                     selectedCharacter = hit.collider.name;
                                     initialmovementPoint = GameObject.Find(selectedCharacter).transform.position;
@@ -169,27 +173,144 @@ public class GameController : MonoBehaviour
                                 {
                                     case 1:
                                         Debug.Log(en[0].name + " a matat a " + selectedCharacter + " en combat.");
+                                        GameObject.Find(selectedCharacter).GetComponent<Character>().setState('D');
+                                        GameObject.Destroy(GameObject.Find(selectedCharacter));
                                         break;
                                     case 2:
                                         Debug.Log(selectedCharacter + " a matat a " + en[0].name + " en combat.");
+                                        en[0].GetComponent<Character>().setState('D');
+                                        GameObject.Destroy(en[0]);
                                         break;
                                 }
+                                checkUnits();
                             }
                             else
                             {
                                 Debug.Log("No hi ha enemics a prop.");
                             }
-                            turnState = 'I';
                             GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
+                            GameObject.Find(selectedCharacter).GetComponent<Character>().setState('M');
                             selectedCharacter = "";
                             disableUnit();
+                            turnState = 'I';
                         }
                         break;
                 }
                 break;
-            case 'A':
-                disableUnit();
-                //Todo
+            case 'A':   //Torn de la IA
+                if (selAICharacter == null)
+                {
+                    selAICharacter = findUnitWithClosestThreads();
+                    flagIA = false;
+                }
+                else
+                {
+                    switch (turnState)
+                    {
+                        case 'I':
+                            if (!flagIA)
+                            {
+                                flagIA = true;   //Bloquejem l'accés al bloc d'execució per a que no entri a cada frame quan s'executi l'Update.
+                                GameObject closest = getClosestThread(selAICharacter.transform.position, selAICharacter.tag);
+                                initialmovementPoint = selAICharacter.transform.position;
+                                destination = closest.transform.position;
+                                GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); //El rang que es passa sera el rang que tingui l'arma d'atac
+                                if (en[0] != null)
+                                {
+                                    int tots = 0;
+                                    bool hiEs = false;
+                                    do
+                                    {
+                                        if (en[tots] == closest)
+                                        {
+                                            hiEs = true;
+                                        }
+                                        tots++;
+                                    } while (tots < en.Length);
+                                    if (hiEs)   //De moment si no es troba anira a per el primer de la llista
+                                    {
+                                        Debug.Log("L'amenaça més propera es a rang d'atac!");
+                                        enemyTarget = closest;
+                                    }
+                                    else
+                                    {
+                                        Debug.Log("Hi ha més enemics a rang que no són l'amenaça més propera");
+                                        enemyTarget = en[0];
+                                    }
+                                    isNotMoving = true;
+                                }
+                                else
+                                {
+                                    enemyTarget = closest;
+                                    Debug.Log("No hi ha enemics a rang d'atac");
+                                    var heading = enemyTarget.transform.position - selAICharacter.transform.position;
+
+                                    //De moment es mourá en la direcció a la unitat enemiga a la major distancia que pugui
+                                    if (Vector3.Distance(destination, selAICharacter.transform.position) < 20)    //20 es el radi de la esfera i per tant el valor que haurem d'assignar al moviment del personatge
+                                    {
+                                        selAICharacter.GetComponent<NavMeshAgent>().SetDestination(destination);
+                                        selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance = 4;   //Fem que es quedi a una distancia prudencial de la unitat enemiga
+                                        selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
+                                        isNotMoving = true;
+                                    }
+                                    else
+                                    {
+                                        selAICharacter.GetComponent<NavMeshAgent>().SetDestination(destination);
+                                        selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance = (Vector3.Distance(destination, selAICharacter.transform.position) - 20);   //Fem que es quedi a una distancia prudencial de la unitat enemiga
+                                        selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
+                                        isNotMoving = false;
+                                    }
+                                }
+                                turnState = 'A';
+                            }
+                            break;
+                        case 'A':
+                            if (flagIA)
+                            {
+                                float notMovingDist = 0;
+                                if (isNotMoving)
+                                    notMovingDist = Vector3.Distance(destination, initialmovementPoint);
+                                else
+                                    notMovingDist = (Vector3.Distance(destination, initialmovementPoint) - 20);
+                                if (Vector3.Distance(destination, selAICharacter.transform.position) <= notMovingDist)
+                                {
+                                    selAICharacter.GetComponent<NavMeshAgent>().isStopped = true;
+                                    GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); //El rang que es passa sera el rang que tingui l'arma d'atac
+                                    if (en[0] == enemyTarget)
+                                    {
+                                        Debug.Log("Es pot atacar a un enemic!");
+                                        //De moment com només tenim una unitat aliada i una unitat enemiga farem que realitzi l'atac directament.
+                                        Debug.Log(selAICharacter.name + " es disposa a atacar a " + en[0].name);
+                                        int dead = combatTurn(selAICharacter.GetComponent<Character>(), en[0].GetComponent<Character>());
+                                        switch (dead)
+                                        {
+                                            case 1:
+                                                Debug.Log(en[0].name + " a matat a " + selAICharacter.name + " en combat.");
+                                                selAICharacter.GetComponent<Character>().setState('D');
+                                                GameObject.Destroy(selAICharacter);
+                                                break;
+                                            case 2:
+                                                Debug.Log(selAICharacter.name + " a matat a " + en[0].name + " en combat.");
+                                                en[0].GetComponent<Character>().setState('D');
+                                                GameObject.Destroy(en[0]);
+                                                break;
+                                        }
+                                        checkUnits();
+                                    }
+                                    else
+                                    {
+                                        Debug.Log("No hi ha enemics a prop.");
+                                    }
+                                    selAICharacter.GetComponent<Character>().setState('M');
+                                    selAICharacter = null;
+                                    enemyTarget = null;
+                                    disableUnit();
+                                    turnState = 'I';
+                                }
+                            }
+                            break;
+                    }
+                }
                 break;
         }
     }
@@ -199,21 +320,25 @@ public class GameController : MonoBehaviour
      */
     void disableUnit()
     {
-        unitsToMove--;
+        checkUnits();
+        unitsToMove = getActiveUnits();
         if (unitsToMove == 0)
         {
             switch (actualTurn)
             {
                 case 'P':
+                    flagIA = true;
                     actualTurn = 'A';
                     Debug.Log("Turno " + turn + " de la IA");
                     unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
+                    activateUnits("Enemy");
                     break;
                 case 'A':
                     turn++; //Cambiem de torn cada cop que acaba la IA el seu
                     actualTurn = 'P';
                     Debug.Log("Turno " + turn + " del jugador");
                     unitsToMove = GameObject.FindGameObjectsWithTag("Ally").Length;
+                    activateUnits("Ally");
                     break;
             }
         }
@@ -366,6 +491,117 @@ public class GameController : MonoBehaviour
     }
 
     /*
+     * Funció que retorna la unitat (Activa) amb amenaces més properes per a realitzar el torn
+     */
+    public GameObject findUnitWithClosestThreads()
+    {
+        //Falta implementar el sistema de unidades activas e inactivas
+        GameObject[] units = GameObject.FindGameObjectsWithTag("Enemy");
+
+        GameObject un = null;
+        int ct = 0;
+        int ctant = -1;
+
+        foreach (GameObject unit in units)
+        {
+            ct = getEnemiesInRange(unit.transform.position, 24, unit.tag).Length;   //Busquem el nombre d'enemic en rang d'atac màxim
+            if (ct > ctant)
+            {
+                un = unit;
+                ctant = ct;
+            }
+        }
+        return un;
+    }
+
+    /*
+     * Funció que retorna l'enemic més proper a la unitat (Més endevant aquesta amenaça no ha de ser la unitat més propera sino la que mes dany pugui causar)
+     */
+    public GameObject getClosestThread(Vector3 pos, string tag)
+    {
+        GameObject[] enemies = null;
+        GameObject enInRange = null;
+        int i = 0;
+        float minDistance = -1;
+        switch (tag)
+        {
+            case "Ally":
+                enemies = GameObject.FindGameObjectsWithTag("Enemy");
+                break;
+            case "Enemy":
+                enemies = GameObject.FindGameObjectsWithTag("Ally");
+                break;
+        }
+
+        foreach (GameObject unit in enemies)
+        {
+            if (minDistance == -1) minDistance = Vector3.Distance(unit.transform.position, pos);
+            if (Vector3.Distance(unit.transform.position, pos) <= minDistance)
+            {
+                enInRange = unit;
+                i++;
+            }
+        }
+        return enInRange;
+    }
+
+    /*
+     * Funció que comprova el nombre d'unitats del jugador, en cas d'arribar a 0 trobem una death condition i acabem la partida
+     */
+    public void checkUnits()
+    {
+        GameObject[] alies = GameObject.FindGameObjectsWithTag("Ally");
+        int alive = 0;
+
+        foreach (GameObject unit in alies)
+        {
+            if (unit.GetComponent<Character>().getState() != 'D') alive++;
+        }
+
+        if (alive == 0)
+        {
+            Debug.Log("GAME OVER, ja no et queden unitats per continuar.");
+            Application.Quit();
+        }
+    }
+    /*
      * Crear una función para la ejecucion de las curaciones entre dos personajes
      */
+
+    /*
+     * Funció per activar totes les unitats a l'inici del torn
+     */
+    public void activateUnits(string tag)
+    {
+        GameObject[] units = GameObject.FindGameObjectsWithTag(tag);
+        foreach (GameObject unit in units)
+        {
+            unit.GetComponent<Character>().setState('A');
+        }
+    }
+
+    /*
+     * Funció per obtenir el nombre d'unitats activables en el torn actual
+     */
+    public int getActiveUnits()
+    {
+        int actUnits = 0;
+        string tag = null;
+        switch (actualTurn)
+        {
+            case 'P':
+                tag = "Ally";
+                break;
+            case 'A':
+                tag = "Enemy";
+                break;
+        }
+        GameObject[] units = GameObject.FindGameObjectsWithTag(tag);
+        foreach (GameObject unit in units)
+        {
+            if (unit.GetComponent<Character>().getState() == 'A')
+                actUnits++;
+        }
+        return actUnits;
+    }
 }

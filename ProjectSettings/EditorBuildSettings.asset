@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Tales_from_Nahelm/Scenes/MainMenu.unity
+    guid: 9c2c2125865389649bc4c211199d41a2
+  - enabled: 1
     path: Assets/Tales_from_Nahelm/Scenes/Battle.unity
     guid: 08deabfade2d1d9499e49c5c807d8040
   m_configObjects: {}
