@@ -80,6 +80,11 @@ public class Character : MonoBehaviour
 
     }
 
+    public int getActualPV()
+    {
+        return actualPV;
+    }
+
     public char getState()
     {
         return state;
@@ -87,9 +92,9 @@ public class Character : MonoBehaviour
 
     public int recieveDamage(int damageDealt)
     {
-        pv -= damageDealt;
-        if (pv < 0) pv = 0;
-        return pv;
+        actualPV -= damageDealt;
+        if (actualPV < 0) actualPV = 0;
+        return actualPV;
     }
 
     public Weapon getEquipedWeapon()

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
     private int turn;                   //Comptador dels torns que s'han realitzat durant la partida (cada cop que passa el torn de l'enemic incrementa en 1
     private char actualTurn;            //Indicador de quin jugador té el torn actualment (P -> jugador | A -> inteligencia artificial)
     private int unitsToMove;            // Comptador de les unitats del jugador amb torn que falten per moure
-    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge pot atacar) //S'ampliaran mes endevant
+    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge pot atacar, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps]) //S'ampliaran mes endevant
     private string selectedCharacter;   //Variable que ens indica quin personatge esta seleccionat en cas d'estar-ho, sino es trobara un valor vuit.
     Vector3 initialmovementPoint;
     Vector3 destination;
@@ -16,6 +17,7 @@ public class GameController : MonoBehaviour
     GameObject selAICharacter;
     GameObject enemyTarget;             //Unitat seleccionada per atacar
     bool isNotMoving;
+    float timer = 5.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -23,6 +25,16 @@ public class GameController : MonoBehaviour
         /*
          * Hay que generar los valores reales de las estadisticas de los personajes
          */
+
+        GameObject.Find("UnitName").GetComponent<Text>().enabled = false;
+        GameObject.Find("Live").GetComponent<Text>().enabled = false;
+        GameObject.Find("ActualLive").GetComponent<Text>().enabled = false;
+        GameObject.Find("TotalLive").GetComponent<Text>().enabled = false;
+        GameObject.Find("GAMEOVER").GetComponent<Text>().enabled = false;
+        GameObject.Find("BattleRes1").GetComponent<Text>().enabled = false;
+        GameObject.Find("BattleRes2").GetComponent<Text>().enabled = false;
+        GameObject.Find("BattleRes3").GetComponent<Text>().enabled = false;
+
 
         Debug.Log("Empezamos!");
         Debug.Log("Inicializamos aliados!");
@@ -87,16 +99,23 @@ public class GameController : MonoBehaviour
         switch (actualTurn)
         {
             case 'P':
+                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " del jugador";
+                GameObject.Find("ActualTurn").GetComponent<Text>().text = "Player Turn";
+                GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.blue;
                 Debug.Log("Turno " + turn + " del jugador");
                 unitsToMove = GameObject.FindGameObjectsWithTag("Ally").Length;
                 break;
             case 'A':
+                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " de la IA";
+                GameObject.Find("ActualTurn").GetComponent<Text>().text = "Enemy Turn";
+                GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.red;
                 Debug.Log("Turno " + turn + " de la IA");
                 unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
                 break;
         }
 
-        turnState = 'I';
+        GameObject.Find("ActualTurn").GetComponent<Text>().enabled = true;
+        turnState = 'T';
         selectedCharacter = "";
 
         /*Todo
@@ -109,6 +128,43 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        /*
+         * Comprobar si hay algun personaje seleccionado para mostrar los datos en la UI
+         */
+        if (selectedCharacter != null && selectedCharacter != "")
+        {
+            GameObject.Find("UnitName").GetComponent<Text>().text = selectedCharacter;
+            GameObject.Find("ActualLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getActualPV().ToString();
+            GameObject.Find("TotalLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getPV().ToString();
+            GameObject.Find("TotalLive").GetComponent<Text>().enabled = true;
+            GameObject.Find("UnitName").GetComponent<Text>().enabled = true;
+            GameObject.Find("Live").GetComponent<Text>().enabled = true;
+            GameObject.Find("ActualLive").GetComponent<Text>().enabled = true;
+            GameObject.Find("TotalLive").GetComponent<Text>().enabled = true;
+        }
+        else
+        {
+            GameObject.Find("UnitName").GetComponent<Text>().enabled = false;
+            GameObject.Find("Live").GetComponent<Text>().enabled = false;
+            GameObject.Find("ActualLive").GetComponent<Text>().enabled = false;
+            GameObject.Find("TotalLive").GetComponent<Text>().enabled = false;
+        }
+
+        if (turnState == 'T')
+        {
+            timer -= Time.deltaTime;
+            if (timer <= 0.0f)
+            {
+                GameObject.Find("ActualTurn").GetComponent<Text>().enabled = false;
+                turnState = 'I';
+            }
+        }
+
+        if (turnState == 'G')//En Game Over sortirem amb qualsevol input tant al teclat com al ratolí
+        {
+            if (Input.anyKey) Application.Quit();
+        }
+
         /*
          * Controlar las condiciones de juego
          */
@@ -192,7 +248,6 @@ public class GameController : MonoBehaviour
                             GameObject.Find(selectedCharacter).GetComponent<Character>().setState('M');
                             selectedCharacter = "";
                             disableUnit();
-                            turnState = 'I';
                         }
                         break;
                 }
@@ -274,6 +329,7 @@ public class GameController : MonoBehaviour
                                     notMovingDist = (Vector3.Distance(destination, initialmovementPoint) - 20);
                                 if (Vector3.Distance(destination, selAICharacter.transform.position) <= notMovingDist)
                                 {
+                                    flagIA = false;
                                     selAICharacter.GetComponent<NavMeshAgent>().isStopped = true;
                                     GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); //El rang que es passa sera el rang que tingui l'arma d'atac
                                     if (en[0] == enemyTarget)
@@ -305,7 +361,6 @@ public class GameController : MonoBehaviour
                                     selAICharacter = null;
                                     enemyTarget = null;
                                     disableUnit();
-                                    turnState = 'I';
                                 }
                             }
                             break;
@@ -322,7 +377,7 @@ public class GameController : MonoBehaviour
     {
         checkUnits();
         unitsToMove = getActiveUnits();
-        if (unitsToMove == 0)
+        if (unitsToMove == 0 && turnState != 'G')
         {
             switch (actualTurn)
             {
@@ -330,17 +385,26 @@ public class GameController : MonoBehaviour
                     flagIA = true;
                     actualTurn = 'A';
                     Debug.Log("Turno " + turn + " de la IA");
+                    GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " de la IA";
+                    GameObject.Find("ActualTurn").GetComponent<Text>().text = "Enemy Turn";
+                    GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.red;
                     unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
                     activateUnits("Enemy");
                     break;
                 case 'A':
                     turn++; //Cambiem de torn cada cop que acaba la IA el seu
                     actualTurn = 'P';
+                    GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " del jugador";
+                    GameObject.Find("ActualTurn").GetComponent<Text>().text = "Player Turn";
+                    GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.blue;
                     Debug.Log("Turno " + turn + " del jugador");
                     unitsToMove = GameObject.FindGameObjectsWithTag("Ally").Length;
                     activateUnits("Ally");
                     break;
             }
+            GameObject.Find("ActualTurn").GetComponent<Text>().enabled = true;
+            timer = 5.0f;
+            turnState = 'T';
         }
         
     }
@@ -407,6 +471,14 @@ public class GameController : MonoBehaviour
             atkmode = 2;
         }
 
+        GameObject.Find("BattleRes1").GetComponent<Text>().text = "";
+        GameObject.Find("BattleRes2").GetComponent<Text>().text = "";
+        GameObject.Find("BattleRes3").GetComponent<Text>().text = "";
+
+        GameObject.Find("BattleRes1").GetComponent<Text>().enabled = true;
+        GameObject.Find("BattleRes2").GetComponent<Text>().enabled = true;
+        GameObject.Find("BattleRes3").GetComponent<Text>().enabled = true;
+
         //Ataca l'atacant
         recIsDead = realizeAtack(starter, recieber);
         if (recIsDead) return 2;
@@ -447,6 +519,7 @@ public class GameController : MonoBehaviour
         bool isAHit = false;                                                            //Variable que indica si s'encerta el cop a realitzar
         int damageToEnemy = 0;
         int reHP;
+        string resText;                                                                 //Text que es mostrará amb els resultats de la batalla
 
         randV = Random.Range(1, 100);
         if (randV <= atckStats[2] && randV != 0)
@@ -473,16 +546,25 @@ public class GameController : MonoBehaviour
 
         if (critical == 3)
         {
+            resText = st.name + " realitza un atac crític a " + re.name + " que fa " + damageToEnemy + " punts de dany!";
             Debug.Log(st.name + " realitza un atac crític a " + re.name + " que fa " + damageToEnemy + " punts de dany!");
         }
         else if (isAHit)
         {
+            resText = st.name + " realitza un atac a " + re.name + " que fa " + damageToEnemy + " punts de dany.";
             Debug.Log(st.name + " realitza un atac a " + re.name + " que fa " + damageToEnemy + " punts de dany.");
         }
         else
         {
+            resText = "L'atac de " + st.name + " ha fallat.";
             Debug.Log("L'atac de " + st.name + " ha fallat.");
         }
+        if (GameObject.Find("BattleRes1").GetComponent<Text>().text == "")
+            GameObject.Find("BattleRes1").GetComponent<Text>().text = resText;
+        else if (GameObject.Find("BattleRes2").GetComponent<Text>().text == "")
+            GameObject.Find("BattleRes2").GetComponent<Text>().text = resText;
+        else
+            GameObject.Find("BattleRes3").GetComponent<Text>().text = resText;
 
         //Realitzar el dany a l'enemic
         reHP = re.recieveDamage(damageToEnemy);
@@ -560,8 +642,9 @@ public class GameController : MonoBehaviour
 
         if (alive == 0)
         {
+            GameObject.Find("GAMEOVER").GetComponent<Text>().enabled = true;
+            turnState = 'G';
             Debug.Log("GAME OVER, ja no et queden unitats per continuar.");
-            Application.Quit();
         }
     }
     /*
