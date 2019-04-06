@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -162,7 +163,7 @@ public class GameController : MonoBehaviour
 
         if (turnState == 'G')//En Game Over sortirem amb qualsevol input tant al teclat com al ratolí
         {
-            if (Input.anyKey) Application.Quit();
+            if (Input.anyKey)  SceneManager.LoadScene(0);   //Retornem al menu inicial del joc
         }
 
         /*
