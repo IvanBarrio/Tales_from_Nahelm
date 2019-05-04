@@ -10,7 +10,7 @@ public class GameController : MonoBehaviour
     private int turn;                   //Comptador dels torns que s'han realitzat durant la partida (cada cop que passa el torn de l'enemic incrementa en 1
     private char actualTurn;            //Indicador de quin jugador té el torn actualment (P -> jugador | A -> inteligencia artificial)
     private int unitsToMove;            // Comptador de les unitats del jugador amb torn que falten per moure
-    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge pot atacar, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps]) //S'ampliaran mes endevant
+    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge pot atacar, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial) //S'ampliaran mes endevant
     private string selectedCharacter;   //Variable que ens indica quin personatge esta seleccionat en cas d'estar-ho, sino es trobara un valor vuit.
     Vector3 initialmovementPoint;
     Vector3 destination;
@@ -35,7 +35,8 @@ public class GameController : MonoBehaviour
         GameObject.Find("BattleRes1").GetComponent<Text>().enabled = false;
         GameObject.Find("BattleRes2").GetComponent<Text>().enabled = false;
         GameObject.Find("BattleRes3").GetComponent<Text>().enabled = false;
-
+        GameObject.Find("TurnShow").GetComponent<Text>().enabled = false;
+        GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
 
         Debug.Log("Empezamos!");
         Debug.Log("Inicializamos aliados!");
@@ -97,26 +98,7 @@ public class GameController : MonoBehaviour
         Debug.Log("Inicializamos Turnos!");
         turn = 1;
         actualTurn = 'P';
-        switch (actualTurn)
-        {
-            case 'P':
-                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " del jugador";
-                GameObject.Find("ActualTurn").GetComponent<Text>().text = "Player Turn";
-                GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.blue;
-                Debug.Log("Turno " + turn + " del jugador");
-                unitsToMove = GameObject.FindGameObjectsWithTag("Ally").Length;
-                break;
-            case 'A':
-                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " de la IA";
-                GameObject.Find("ActualTurn").GetComponent<Text>().text = "Enemy Turn";
-                GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.red;
-                Debug.Log("Turno " + turn + " de la IA");
-                unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
-                break;
-        }
-
-        GameObject.Find("ActualTurn").GetComponent<Text>().enabled = true;
-        turnState = 'T';
+        turnState = 'D';
         selectedCharacter = "";
 
         /*Todo
@@ -137,6 +119,7 @@ public class GameController : MonoBehaviour
             GameObject.Find("UnitName").GetComponent<Text>().text = selectedCharacter;
             GameObject.Find("ActualLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getActualPV().ToString();
             GameObject.Find("TotalLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getPV().ToString();
+            GameObject.Find("UnitInfo").GetComponent<Image>().enabled = true;
             GameObject.Find("TotalLive").GetComponent<Text>().enabled = true;
             GameObject.Find("UnitName").GetComponent<Text>().enabled = true;
             GameObject.Find("Live").GetComponent<Text>().enabled = true;
@@ -149,6 +132,7 @@ public class GameController : MonoBehaviour
             GameObject.Find("Live").GetComponent<Text>().enabled = false;
             GameObject.Find("ActualLive").GetComponent<Text>().enabled = false;
             GameObject.Find("TotalLive").GetComponent<Text>().enabled = false;
+            GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
         }
 
         if (turnState == 'T')
@@ -385,25 +369,18 @@ public class GameController : MonoBehaviour
                 case 'P':
                     flagIA = true;
                     actualTurn = 'A';
-                    Debug.Log("Turno " + turn + " de la IA");
-                    GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " de la IA";
-                    GameObject.Find("ActualTurn").GetComponent<Text>().text = "Enemy Turn";
-                    GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.red;
+                    displayTurn();
                     unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
                     activateUnits("Enemy");
                     break;
                 case 'A':
                     turn++; //Cambiem de torn cada cop que acaba la IA el seu
                     actualTurn = 'P';
-                    GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " del jugador";
-                    GameObject.Find("ActualTurn").GetComponent<Text>().text = "Player Turn";
-                    GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.blue;
-                    Debug.Log("Turno " + turn + " del jugador");
+                    displayTurn();
                     unitsToMove = GameObject.FindGameObjectsWithTag("Ally").Length;
                     activateUnits("Ally");
                     break;
             }
-            GameObject.Find("ActualTurn").GetComponent<Text>().enabled = true;
             timer = 5.0f;
             turnState = 'T';
         }
@@ -413,6 +390,15 @@ public class GameController : MonoBehaviour
     public char getTurnState()
     {
         return turnState;
+    }
+
+    public void setTurnState(char turn)
+    {
+        this.turnState = turn;
+        if (turnState == 'T')
+        {
+            displayTurn();
+        }
     }
 
     public string getSelectedCharacter()
@@ -687,5 +673,29 @@ public class GameController : MonoBehaviour
                 actUnits++;
         }
         return actUnits;
+    }
+
+    public void displayTurn()
+    {
+        GameObject.Find("TurnShow").GetComponent<Text>().enabled = true;
+        switch (actualTurn)
+        {
+            case 'P':
+                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " del jugador";
+                GameObject.Find("ActualTurn").GetComponent<Text>().text = "Player Turn";
+                GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.blue;
+                Debug.Log("Turno " + turn + " del jugador");
+                unitsToMove = GameObject.FindGameObjectsWithTag("Ally").Length;
+                break;
+            case 'A':
+                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " de la IA";
+                GameObject.Find("ActualTurn").GetComponent<Text>().text = "Enemy Turn";
+                GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.red;
+                Debug.Log("Turno " + turn + " de la IA");
+                unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
+                break;
+        }
+
+        GameObject.Find("ActualTurn").GetComponent<Text>().enabled = true;
     }
 }
