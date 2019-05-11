@@ -10,7 +10,8 @@ public class GameController : MonoBehaviour
     private int turn;                   //Comptador dels torns que s'han realitzat durant la partida (cada cop que passa el torn de l'enemic incrementa en 1
     private char actualTurn;            //Indicador de quin jugador té el torn actualment (P -> jugador | A -> inteligencia artificial)
     private int unitsToMove;            // Comptador de les unitats del jugador amb torn que falten per moure
-    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge pot atacar, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial) //S'ampliaran mes endevant
+    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge ha acabat de moure, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial, W->En espera de la selecció d'acció sobre una unitat, B->Estat de batalla, S->Selecció d'arma per realitzar la batalla, P->Enemic confrimat i inici del combat) //S'ampliaran mes endevant
+    //I-C-A-G-T-D-W-B-S-P
     private string selectedCharacter;   //Variable que ens indica quin personatge esta seleccionat en cas d'estar-ho, sino es trobara un valor vuit.
     Vector3 initialmovementPoint;
     Vector3 destination;
@@ -37,7 +38,7 @@ public class GameController : MonoBehaviour
         GameObject.Find("BattleRes3").GetComponent<Text>().enabled = false;
         GameObject.Find("TurnShow").GetComponent<Text>().enabled = false;
         GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
-
+        
         Debug.Log("Empezamos!");
         Debug.Log("Inicializamos aliados!");
         GameObject[] alies = GameObject.FindGameObjectsWithTag("Ally");
@@ -100,7 +101,6 @@ public class GameController : MonoBehaviour
         actualTurn = 'P';
         turnState = 'D';
         selectedCharacter = "";
-
         /*Todo
           * Inicializar un par de enemigos y un pj de jugador
           * Inicializar armas para cada uno de los personajes creados
@@ -168,12 +168,21 @@ public class GameController : MonoBehaviour
                             if (Physics.Raycast(ray, out hit))
                             {
                                 //Si pulsem sobre una unitat del jugador en el torn del jugador passem a comprobar si es el torn de la IA i al reves
-                                if (hit.collider.tag == "Ally" && GameObject.Find(hit.collider.name).GetComponent<Character>().getState() == 'A')
+                                if (hit.collider.tag == "Ally")
                                 {
                                     selectedCharacter = hit.collider.name;
-                                    initialmovementPoint = GameObject.Find(selectedCharacter).transform.position;
-                                    turnState = 'C';
-                                    GameObject.Find("MovementArea").transform.position = new Vector3(initialmovementPoint.x, GameObject.Find("MovementArea").transform.position.y, initialmovementPoint.z);
+                                    //Si la unitat té accions pendents de realitzar
+                                    if (GameObject.Find(selectedCharacter).GetComponent<Character>().gethasActions())
+                                    {
+                                        //Poner el menu visible y un turnState donde no se contemple nada hasta que el jugador seleccione una opción.
+                                        turnState = 'W';
+                                        GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
+                                    }
+                                }
+                                else if(hit.collider.tag == "Enemy")
+                                {
+                                    //Si seleccionem una unitat enemiga podem veure les seves estadístiques
+                                    selectedCharacter = hit.collider.name;
                                 }
                             }
                         }
@@ -202,38 +211,83 @@ public class GameController : MonoBehaviour
                     case 'A':
                         if (GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().remainingDistance < 0.1f){
                             GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().isStopped = true;
+
+                            GameObject.Find(selectedCharacter).GetComponent<Character>().setCanMove(false);
+
+                            //Mostraremos otra vez el menú de unidad!!!
+                            turnState = 'W';
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
+
                             GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
-                            GameObject[] en = getEnemiesInRange(GameObject.Find(selectedCharacter).transform.position, 4f, GameObject.Find(selectedCharacter).tag); //El rang que es passa sera el rang que tingui l'arma d'atac
-                            if (en[0] != null)
-                            {
-                                Debug.Log("Es pot atacar a un enemic!");
-                                //De moment com només tenim una unitat aliada i una unitat enemiga farem que realitzi l'atac directament.
-                                Debug.Log(selectedCharacter + " es disposa a atacar a " + en[0].name);
-                                int dead = combatTurn(GameObject.Find(selectedCharacter).GetComponent<Character>(), en[0].GetComponent<Character>());
-                                switch (dead)
-                                {
-                                    case 1:
-                                        Debug.Log(en[0].name + " a matat a " + selectedCharacter + " en combat.");
-                                        GameObject.Find(selectedCharacter).GetComponent<Character>().setState('D');
-                                        GameObject.Destroy(GameObject.Find(selectedCharacter));
-                                        break;
-                                    case 2:
-                                        Debug.Log(selectedCharacter + " a matat a " + en[0].name + " en combat.");
-                                        en[0].GetComponent<Character>().setState('D');
-                                        GameObject.Destroy(en[0]);
-                                        break;
-                                }
-                                checkUnits();
-                            }
-                            else
-                            {
-                                Debug.Log("No hi ha enemics a prop.");
-                            }
+                                                        
                             GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
-                            GameObject.Find(selectedCharacter).GetComponent<Character>().setState('M');
-                            selectedCharacter = "";
-                            disableUnit();
                         }
+                        break;
+                    //Personatge en espera de selecció d'un enemic al que atacar
+                    case 'B':
+                        if (Input.GetMouseButtonDown(0))
+                        {
+                            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                            RaycastHit hit;
+                            if (Physics.Raycast(ray, out hit))
+                            {
+                                //Si pulsem sobre un enemic
+                                if (hit.collider.tag == "Enemy")
+                                {
+                                    if (enemyTarget == GameObject.Find(hit.collider.name))
+                                    {
+                                        //Confirmem que se selecciona aquest enemic per atacar i comencem l'atac
+                                        turnState = 'P';
+                                    }
+                                    else
+                                    {
+                                        GameObject[] en = getEnemiesInRange(GameObject.Find(selectedCharacter).transform.position, 4f, GameObject.Find(selectedCharacter).tag); //El rang que es passa sera el rang que tingui l'arma d'atac
+                                        bool isInRange = false;
+                                        foreach (GameObject e in en)
+                                        {
+                                            if (e.name == hit.collider.name)
+                                            {
+                                                isInRange = true;
+                                            }
+                                        }
+                                        //Si l'enemic es toba a rang d'atac de la unitat
+                                        if (isInRange)
+                                        {
+                                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(true);
+                                            enemyTarget = GameObject.Find(hit.collider.name);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    //Personatge en espera de selecció d'arma amb la que atacar
+                    case 'S':
+                        //ToDo - Seleccionar el arma para atacar
+                        turnState = 'B';
+                        break;
+                    //Comença el combat contra l'enemic seleccionat
+                    case 'P':
+                        turnState = 'I';
+                        int dead = combatTurn(GameObject.Find(selectedCharacter).GetComponent<Character>(), enemyTarget.GetComponent<Character>());
+                        switch (dead)
+                        {
+                            case 1:
+                                Debug.Log(enemyTarget.name + " a matat a " + selectedCharacter + " en combat.");
+                                GameObject.Find(selectedCharacter).GetComponent<Character>().setIsDead(true);
+                                GameObject.Destroy(GameObject.Find(selectedCharacter));
+                                break;
+                            case 2:
+                                Debug.Log(selectedCharacter + " a matat a " + enemyTarget.name + " en combat.");
+                                enemyTarget.GetComponent<Character>().setIsDead(true);
+                                GameObject.Destroy(enemyTarget);
+                                break;
+                        }
+                        checkUnits();
+                        GameObject.Find(selectedCharacter).GetComponent<Character>().SetHasActions(false);
+                        selectedCharacter = "";
+                        enemyTarget = null;
+                        disableUnit();
                         break;
                 }
                 break;
@@ -327,12 +381,12 @@ public class GameController : MonoBehaviour
                                         {
                                             case 1:
                                                 Debug.Log(en[0].name + " a matat a " + selAICharacter.name + " en combat.");
-                                                selAICharacter.GetComponent<Character>().setState('D');
+                                                selAICharacter.GetComponent<Character>().setIsDead(true);
                                                 GameObject.Destroy(selAICharacter);
                                                 break;
                                             case 2:
                                                 Debug.Log(selAICharacter.name + " a matat a " + en[0].name + " en combat.");
-                                                en[0].GetComponent<Character>().setState('D');
+                                                en[0].GetComponent<Character>().setIsDead(true);
                                                 GameObject.Destroy(en[0]);
                                                 break;
                                         }
@@ -342,8 +396,6 @@ public class GameController : MonoBehaviour
                                     {
                                         Debug.Log("No hi ha enemics a prop.");
                                     }
-                                    selAICharacter.GetComponent<Character>().setState('M');
-                                    selAICharacter = null;
                                     enemyTarget = null;
                                     disableUnit();
                                 }
@@ -361,6 +413,18 @@ public class GameController : MonoBehaviour
     void disableUnit()
     {
         checkUnits();
+        //Desactivem el personatge del jugador
+        if (selectedCharacter != null && selectedCharacter != "")
+        {
+            GameObject.Find(selectedCharacter).GetComponent<Character>().SetHasActions(false);
+            selectedCharacter = "";
+        }
+        //Desactivem el personatge de la IA que estigui seleccionat
+        if (selAICharacter != null)
+        {
+            selAICharacter.GetComponent<Character>().SetHasActions(false);
+            selAICharacter = null;
+        }
         unitsToMove = getActiveUnits();
         if (unitsToMove == 0 && turnState != 'G')
         {
@@ -409,18 +473,44 @@ public class GameController : MonoBehaviour
     //Funció que retornará els enemics del personatge que estiguin a rang d'atac
     public GameObject[] getEnemiesInRange(Vector3 pos, float range, string tag)
     {
-        GameObject[] enemies = null;
-        int i = 0;
-        int enNmbr = 0;
+        string enemies = "";
         switch (tag)
         {
             case "Ally":
-                enemies = GameObject.FindGameObjectsWithTag("Enemy");
+                enemies = "Enemy";
                 break;
             case "Enemy":
-                enemies = GameObject.FindGameObjectsWithTag("Ally");
+                enemies = "Ally";
                 break;
         }
+        return getUnitsInRange(pos, range, enemies);
+    }
+
+    //Funció que retornará els aliats del personatge que estiguin a rang
+    public GameObject[] getAliesInRange(Vector3 pos, float range, string tag)
+    {
+        string allies = "";
+        switch (tag)
+        {
+            case "Ally":
+                allies = "Ally";
+                break;
+            case "Enemy":
+                allies = "Enemy";
+                break;
+        }
+        return getUnitsInRange(pos, range, allies);
+    }
+
+    //Funció que retorna les unitats a rang de la seleccionada
+    public GameObject[] getUnitsInRange(Vector3 pos, float range, string tag)
+    {
+        GameObject[] enemies = null;
+        int i = 0;
+        int enNmbr = 0;
+
+        enemies = GameObject.FindGameObjectsWithTag(tag);
+                
 
         enNmbr = enemies.Length;
         GameObject[] enInRange = new GameObject[enNmbr];
@@ -446,6 +536,9 @@ public class GameController : MonoBehaviour
     public int combatTurn(Character starter, Character recieber)
     {
         // Mes endevant podrem trobar més opcions depenent de les armes que portin equipades de moment no es contempla
+
+        //ToDo-> contar con las animaciones de batalla
+
         int atkmode = 0;    //Variable que indicara qui realitzara el doble atac en cas de poder-se realitzar (1-> l'atacant, 2-> l'atacat, 0-> Cap d'ells)
         bool recIsDead = false;
 
@@ -621,10 +714,10 @@ public class GameController : MonoBehaviour
     {
         GameObject[] alies = GameObject.FindGameObjectsWithTag("Ally");
         int alive = 0;
-
+        
         foreach (GameObject unit in alies)
         {
-            if (unit.GetComponent<Character>().getState() != 'D') alive++;
+            if (!unit.GetComponent<Character>().getisDead()) alive++;
         }
 
         if (alive == 0)
@@ -646,7 +739,8 @@ public class GameController : MonoBehaviour
         GameObject[] units = GameObject.FindGameObjectsWithTag(tag);
         foreach (GameObject unit in units)
         {
-            unit.GetComponent<Character>().setState('A');
+            unit.GetComponent<Character>().SetHasActions(true);
+            unit.GetComponent<Character>().setCanMove(true);
         }
     }
 
@@ -669,7 +763,7 @@ public class GameController : MonoBehaviour
         GameObject[] units = GameObject.FindGameObjectsWithTag(tag);
         foreach (GameObject unit in units)
         {
-            if (unit.GetComponent<Character>().getState() == 'A')
+            if (unit.GetComponent<Character>().gethasActions())
                 actUnits++;
         }
         return actUnits;
@@ -697,5 +791,40 @@ public class GameController : MonoBehaviour
         }
 
         GameObject.Find("ActualTurn").GetComponent<Text>().enabled = true;
+    }
+
+    /*
+     * Funció que inicia el moviment de la unitat
+     */
+    public void iniMovement()
+    {
+        initialmovementPoint = GameObject.Find(selectedCharacter).transform.position;
+        turnState = 'C';
+        GameObject.Find("MovementArea").transform.position = new Vector3(initialmovementPoint.x, GameObject.Find("MovementArea").transform.position.y, initialmovementPoint.z);
+    }
+
+    /*
+     * Funció que desactiva la unitat activa seleccionada per el jugador.
+     */
+    public void deactivateUnit()
+    {
+        turnState = 'I';
+        disableUnit();
+    }
+
+    /*
+     * Funció que habilita la selecció d'un enemic a atacar per una unitat del jugador
+     */
+    public void selectAttackTarget()
+    {
+        turnState = 'B';
+    }
+
+    /*
+     * Funció que mostra l'elecció de l'arma a emprar per atacar a un enemic
+     */
+    public void selectWeaponToAttack()
+    {
+        turnState = 'S';
     }
 }

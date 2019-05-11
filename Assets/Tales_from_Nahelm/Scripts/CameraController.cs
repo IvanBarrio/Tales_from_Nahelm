@@ -21,7 +21,7 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'D')
+        if (GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'D' && GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'W')
         {
             //Codi per moure la camara
             Vector3 p = GetBaseInput();

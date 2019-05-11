@@ -15,6 +15,7 @@ public class Dialog : MonoBehaviour
 
     void Start()
     {
+        continueButton.SetActive(false);
         StartCoroutine(Type());
     }
 

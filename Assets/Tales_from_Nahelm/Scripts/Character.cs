@@ -18,9 +18,11 @@ public class Character : MonoBehaviour
     private int res;                    //Resistencia del personatge
     private int mov;                    //Moviment del personatge
     private Weapon equipedWeapon;       //Arma equipada
-    private Object[] inventory;         //Motxilla del personatge
+    private Item[] inventory;           //Motxilla del personatge
     private int actualPV;               //Valor actual dels punts de vida del personatge
-    private char state;                 //Estat del personatge      A -> Actiu | M -> Mogut | D -> Mort
+    private bool canMove;
+    private bool isDead;
+    private bool hasActions;
 
     //Funció inicialitzadora del personatge
     public void createCharacter(string tag, string cn, string cc, int pv, int str, int mag, int skl, int spd, int lck, int def, int res, int mov, int lvl)
@@ -40,8 +42,10 @@ public class Character : MonoBehaviour
         this.res = res;
         this.mov = mov;
         this.lvl = lvl;
-        this.state = 'A';
-        inventory = new GameObject[5];
+        this.canMove = true;
+        this.isDead = false;
+        this.hasActions = true;
+        inventory = new Item[5];
         //Tots els personatges començarán sense experiencia
         this.exp = 0;
     }
@@ -58,9 +62,19 @@ public class Character : MonoBehaviour
         equipedWeapon = w;
     }
 
-    public void setState(char state)
+    public void SetHasActions(bool hasActions)
     {
-        this.state = state;
+        this.hasActions = hasActions;
+    }
+
+    public void setCanMove(bool canMove)
+    {
+        this.canMove = canMove;
+    }
+
+    public void setIsDead(bool isDead)
+    {
+        this.isDead = isDead;
     }
 
     //Getters
@@ -85,9 +99,19 @@ public class Character : MonoBehaviour
         return actualPV;
     }
 
-    public char getState()
+    public bool getCanMove()
     {
-        return state;
+        return canMove;
+    }
+
+    public bool getisDead()
+    {
+        return isDead;
+    }
+
+    public bool gethasActions()
+    {
+        return hasActions;
     }
 
     public int recieveDamage(int damageDealt)
@@ -169,6 +193,40 @@ public class Character : MonoBehaviour
     public void printStats()
     {
         Debug.Log("HP: " + pv);
+    }
+
+    //Retornem la quantitat de recuperació de vida que pot oferir una curació màgica.
+    public int magicHealing()
+    {
+        return ((mag / 2) + 8);
+    }
+
+    //Retornem si la unitat pot realitzar accions curatives
+    //Priestess o Sorcerer
+    public bool canHeal()
+    {
+        bool healer = false;
+        if (charClass == "Priestess" || charClass == "Sorcerer")
+        {
+            if (hasInInventory("Staff")) healer = true;
+        }
+        return healer;
+    }
+
+    /*
+     * Funció que retorna si hi ha un objecte en l'inventori del personatge
+     */
+    public bool hasInInventory(string name)
+    {
+        bool hasIt = false;
+        foreach (Item obj in inventory)
+        {
+            if (obj.getName().Equals(name))
+            {
+                hasIt = true;
+            }
+        }
+        return hasIt;
     }
 
     /*
