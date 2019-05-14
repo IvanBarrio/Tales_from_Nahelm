@@ -12,6 +12,7 @@ public class GameController : MonoBehaviour
     private int unitsToMove;            // Comptador de les unitats del jugador amb torn que falten per moure
     private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge ha acabat de moure, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial, W->En espera de la selecció d'acció sobre una unitat, B->Estat de batalla, S->Selecció d'arma per realitzar la batalla, P->Enemic confrimat i inici del combat) //S'ampliaran mes endevant
     //I-C-A-G-T-D-W-B-S-P
+    private int menuState;              //Variable que controla en quin moment del menu ens trobem per poder tirar enrere accions
     private string selectedCharacter;   //Variable que ens indica quin personatge esta seleccionat en cas d'estar-ho, sino es trobara un valor vuit.
     Vector3 initialmovementPoint;
     Vector3 destination;
@@ -20,6 +21,8 @@ public class GameController : MonoBehaviour
     GameObject enemyTarget;             //Unitat seleccionada per atacar
     bool isNotMoving;
     float timer = 5.0f;
+    bool goBack;
+    char nextTurn;
 
     // Start is called before the first frame update
     void Start()
@@ -66,6 +69,7 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().createCharacter("Ally", "Ann", "Priestess", 17, 8, 10, 8, 9, 8, 8, 5, 20, 1);//faltan los crecimientos y los totales
                     unit.GetComponent<Weapon>().setWeapon("Aestus", "Sword", "A", 10, 1, 80, 0);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
+                    unit.GetComponent<Character>().obtainObject(new Item("Staff"));
                     break;
             }
         }
@@ -86,6 +90,7 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().createCharacter("Enemy", "Ardsede", "Sorcerer", 21, 8, 0, 13, 12, 0, 5, 1, 20, 1);//todo
                     unit.GetComponent<Weapon>().setWeapon("Armads", "Axe", "A", 17, 1, 80, 10);//todo
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
+                    unit.GetComponent<Character>().obtainObject(new Item("Staff"));
                     break;
                 default:
                     //Hacer un generador aleatorio de diferentes tipos de unidades para los soldados / Que lo mire dependiendo de las armas que lleve
@@ -101,6 +106,8 @@ public class GameController : MonoBehaviour
         actualTurn = 'P';
         turnState = 'D';
         selectedCharacter = "";
+        menuState = 0;
+        goBack = true;
         /*Todo
           * Inicializar un par de enemigos y un pj de jugador
           * Inicializar armas para cada uno de los personajes creados
@@ -140,8 +147,16 @@ public class GameController : MonoBehaviour
             timer -= Time.deltaTime;
             if (timer <= 0.0f)
             {
-                GameObject.Find("ActualTurn").GetComponent<Text>().enabled = false;
-                turnState = 'I';
+                if (goBack)
+                {
+                    GameObject.Find("ActualTurn").GetComponent<Text>().enabled = false;
+                    turnState = 'I';
+                }
+                else
+                {
+                    goBack = true;
+                    turnState = nextTurn;
+                }
             }
         }
 
@@ -176,6 +191,7 @@ public class GameController : MonoBehaviour
                                     {
                                         //Poner el menu visible y un turnState donde no se contemple nada hasta que el jugador seleccione una opción.
                                         turnState = 'W';
+                                        menuState = 1;
                                         GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
                                     }
                                 }
@@ -189,7 +205,19 @@ public class GameController : MonoBehaviour
                         break;
                     //Personatge seleccionat i disponible per a moure
                     case 'C':
-                        if (Input.GetMouseButtonDown(0))
+                        if (Input.GetKey(KeyCode.Escape) && menuState == 2 && goBack)
+                        {
+                            goBack = false;
+                            //Se cancela la accion de movimiento y volvemos al menu anterior
+                            turnState = 'T';
+                            timer = 0.5f;
+                            nextTurn = 'W';
+                            menuState = 1;
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
+                            GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
+
+                        }
+                        else if (Input.GetMouseButtonDown(0))
                         {
                             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -216,6 +244,7 @@ public class GameController : MonoBehaviour
 
                             //Mostraremos otra vez el menú de unidad!!!
                             turnState = 'W';
+                            menuState = 3;
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
 
                             GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
@@ -225,7 +254,16 @@ public class GameController : MonoBehaviour
                         break;
                     //Personatge en espera de selecció d'un enemic al que atacar
                     case 'B':
-                        if (Input.GetMouseButtonDown(0))
+                        if (Input.GetKey(KeyCode.Escape) && menuState == 5 && goBack)
+                        {
+                            //Si ens trobem en la seleccio d'enemic tornem a la seleccio d'arma
+                            goBack = false;
+                            nextTurn = 'S';
+                            turnState = 'T';
+                            menuState = 4;
+                            timer = 0.5f;
+                        }
+                        else if (Input.GetMouseButtonDown(0))
                         {
                             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                             RaycastHit hit;
@@ -263,8 +301,24 @@ public class GameController : MonoBehaviour
                         break;
                     //Personatge en espera de selecció d'arma amb la que atacar
                     case 'S':
-                        //ToDo - Seleccionar el arma para atacar
-                        turnState = 'B';
+                        if (Input.GetKey(KeyCode.Escape) && menuState == 4 && goBack)
+                        {
+                            //Si ens trobem en la selecció d'arma tornem a la selecció d'acció
+                            goBack = false;
+                            turnState = 'T';
+                            timer = 0.5f;
+                            nextTurn = 'W';
+                            menuState = 3;
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
+                            GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
+                            GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
+                        }
+                        else
+                        {
+                            //ToDo - Seleccionar el arma para atacar
+                            turnState = 'B';
+                            menuState = 5;
+                        }
                         break;
                     //Comença el combat contra l'enemic seleccionat
                     case 'P':
@@ -288,6 +342,39 @@ public class GameController : MonoBehaviour
                         selectedCharacter = "";
                         enemyTarget = null;
                         disableUnit();
+                        break;
+                    case 'W':
+                        if (Input.GetKey(KeyCode.Escape) && goBack)
+                        {
+                            //Pasar al menu anterior
+                            switch (menuState)
+                            {
+                                case 1:
+                                    //S'ha seleccionat una unitat -> tirem enrere i no la seleccionem
+                                    goBack = false;
+                                    selectedCharacter = "";
+                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(false);
+                                    turnState = 'T';
+                                    timer = 0.5f;
+                                    nextTurn = 'I';
+                                    menuState = 0;
+                                    break;
+                                case 3:
+                                    //La unitat s'ha mogut, per tant la tornem a posicionar a la seva posició inicial i tornem a entrar en l'estat de moviment
+                                    goBack = false;
+                                    GameObject.Find(selectedCharacter).transform.position = initialmovementPoint;
+                                    GameObject.Find(selectedCharacter).GetComponent<Character>().setCanMove(true);
+                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(false);
+                                    menuState = 2;
+                                    turnState = 'T';
+                                    timer = 0.5f;
+                                    nextTurn = 'C';
+                                    GameObject.Find("MovementArea").transform.position = new Vector3(initialmovementPoint.x, GameObject.Find("MovementArea").transform.position.y, initialmovementPoint.z);
+                                    break;
+                                    // case 6 puede ser para salir del inventario
+                                    // case 7 para salir de los intercanvios
+                            }
+                        }
                         break;
                 }
                 break;
@@ -800,6 +887,7 @@ public class GameController : MonoBehaviour
     {
         initialmovementPoint = GameObject.Find(selectedCharacter).transform.position;
         turnState = 'C';
+        menuState = 2;
         GameObject.Find("MovementArea").transform.position = new Vector3(initialmovementPoint.x, GameObject.Find("MovementArea").transform.position.y, initialmovementPoint.z);
     }
 
@@ -818,6 +906,7 @@ public class GameController : MonoBehaviour
     public void selectAttackTarget()
     {
         turnState = 'B';
+        menuState = 5;
     }
 
     /*
@@ -826,5 +915,13 @@ public class GameController : MonoBehaviour
     public void selectWeaponToAttack()
     {
         turnState = 'S';
+        menuState = 4;
+    }
+
+    public void endGameVictory()
+    {
+        GameObject.Find("GAMEOVER").GetComponent<Text>().text = "VICTORY!";
+        GameObject.Find("GAMEOVER").GetComponent<Text>().color = Color.blue;
+        turnState = 'G';
     }
 }

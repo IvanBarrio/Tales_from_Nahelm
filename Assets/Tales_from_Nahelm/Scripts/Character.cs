@@ -60,6 +60,7 @@ public class Character : MonoBehaviour
     public void setWeapon(Weapon w)
     {
         equipedWeapon = w;
+        inventory[0] = w;
     }
 
     public void SetHasActions(bool hasActions)
@@ -227,6 +228,23 @@ public class Character : MonoBehaviour
             }
         }
         return hasIt;
+    }
+
+    /*
+     * Funció per afegir un objecte a l'inventari
+     */
+    public void obtainObject(Item i)
+    {
+        int lastInvSp = 0;
+        while (lastInvSp != 99)
+        {
+            if (inventory[lastInvSp] == null)
+            {
+                inventory[lastInvSp] = i;
+                lastInvSp = 99;
+            }
+            lastInvSp++;
+        }
     }
 
     /*

@@ -4,7 +4,15 @@ using UnityEngine;
 
 public class Item : MonoBehaviour
 {
-    private string Name;
+    private string iName;
+
+    public Item()
+    { }
+
+    public Item(string name)
+    {
+        this.iName = name;
+    }
 
     public string getName()
     {
@@ -13,6 +21,6 @@ public class Item : MonoBehaviour
 
     public void setName(string name)
     {
-        this.name = name;
+        this.iName = name;
     }
 }

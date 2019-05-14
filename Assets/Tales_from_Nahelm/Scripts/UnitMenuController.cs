@@ -12,6 +12,7 @@ public class UnitMenuController : MonoBehaviour
     public GameObject cmdTrade;
     public GameObject cmdWait;
     public GameObject cmdHeal;
+    public GameObject cmdTake;
 
     //Botons per al menu de selecció d'arma
 
@@ -39,6 +40,7 @@ public class UnitMenuController : MonoBehaviour
         cmdInv.SetActive(show);
         cmdTrade.SetActive(show);
         cmdWait.SetActive(show);
+        cmdTake.SetActive(show);
 
         if (show)
         {
@@ -57,6 +59,11 @@ public class UnitMenuController : MonoBehaviour
             GameObject[] al = gc.getAliesInRange(GameObject.Find(selChar).transform.position, 4f, GameObject.Find(selChar).tag); //El rang que es passa sera el rang que tingui l'arma d'atac
             if (al[0] == null)
                cmdTrade.SetActive(false);
+            /*
+             * Si el general enemic segueix en peu no es pot conquerir el castell. Quan el general enemic mori la opció de conquerir serà habilitada.
+             */
+            if (GameObject.Find("Omak") != null)
+                cmdTake.SetActive(false);
         }
     }
 
@@ -97,5 +104,13 @@ public class UnitMenuController : MonoBehaviour
 
         displayUnitMenu(false);
         gc.selectWeaponToAttack();
+    }
+
+    public void conquerCastle()
+    {
+        GameController gc = GameObject.Find("GameController").GetComponent<GameController>();
+
+        displayUnitMenu(false);
+        gc.endGameVictory();
     }
 }
