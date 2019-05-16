@@ -17,6 +17,22 @@ public class Character : MonoBehaviour
     private int def;                    //Defensa del personatge
     private int res;                    //Resistencia del personatge
     private int mov;                    //Moviment del personatge
+    private int maxPv;                  //Punts maxims de vitalitat del personatge
+    private int maxStr;                 //Força maxima del personatge
+    private int maxMag;                 //Magia maxima del personatge
+    private int maxSkl;                 //Habilitat maxima del personatge
+    private int maxSpd;                 //Velocitat maxima del personatge
+    private int maxLck;                 //Sort maxima del personatge
+    private int maxDef;                 //Defensa maxima del personatge
+    private int maxRes;                 //Resistencia maxima del personatge
+    private int pvGrowth;               //Creixement de punts de vitalitat del personatge
+    private int strGrowth;              //Creixement de força del personatge
+    private int magGrowth;              //Creixement de magia del personatge
+    private int sklGrowth;              //Creixement d'habilitat del personatge
+    private int spdGrowth;              //Creixement de velocitat del personatge
+    private int lckGrowth;              //Creixement de sort del personatge
+    private int defGrowth;              //Creixement de defensa del personatge
+    private int resGrowth;              //Creixement de resistencia del personatge
     private Weapon equipedWeapon;       //Arma equipada
     private Item[] inventory;           //Motxilla del personatge
     private int actualPV;               //Valor actual dels punts de vida del personatge
@@ -57,6 +73,31 @@ public class Character : MonoBehaviour
     }
 
     //Setters
+
+    public void setStatsMaxs(int pvm, int strm, int magm, int sklm, int spdm, int lckm, int defm, int resm)
+    {
+        this.maxPv = pvm;
+        this.maxStr = strm;
+        this.maxMag = magm;
+        this.maxSkl = sklm;
+        this.maxSpd = spdm;
+        this.maxLck = lckm;
+        this.maxDef = defm;
+        this.maxRes = resm;
+    }
+
+    public void setStatsGrowth(int pvg, int strg, int magg, int sklg, int spdg, int lckg, int defg, int resg)
+    {
+        this.pvGrowth = pvg;
+        this.strGrowth = strg;
+        this.magGrowth = magg;
+        this.sklGrowth = sklg;
+        this.spdGrowth = spdg;
+        this.lckGrowth = lckg;
+        this.defGrowth = defg;
+        this.resGrowth = resg;
+    }
+
     public void setWeapon(Weapon w)
     {
         equipedWeapon = w;
@@ -248,7 +289,60 @@ public class Character : MonoBehaviour
     }
 
     /*
-     * ToDo:
-     *  -Funció per pujar de nivell
+     * Funció per pujar experiencia i de nivell en cas d'assolir 100 punts d'experiencia
      */
+    public void lvlUp(int exp)
+    {
+        //Si no ens trobem a maxim nivell
+        if (lvl < 20)
+        {
+            this.exp += exp;
+            if (this.exp >= 100)
+            {
+                this.exp -= 100;
+                //pujar el nivell ja que s'han superat els 100 punts d'experiencia
+                int[] rands = new int[8];
+
+                //Generar 8 aleatoris entre 1 i 100
+                for (int i = 0; i < 8; i++)
+                {
+                    rands[i] = Random.Range(1, 100);
+                }
+
+                //Comprovem si el creixement ens permet pujar la estadistica per a cada valor generat si no es troba ja en el seu maxim valor
+                if (rands[0] <= pvGrowth && pv < maxPv)
+                {
+                    pv += 1;
+                }
+                if (rands[1] <= strGrowth && str < maxStr)
+                {
+                    str += 1;
+                }
+                if (rands[2] <= magGrowth && mag < maxMag)
+                {
+                    mag += 1;
+                }
+                if (rands[3] <= sklGrowth && skl < maxSkl)
+                {
+                    skl += 1;
+                }
+                if (rands[4] <= spdGrowth && spd < maxSpd)
+                {
+                    spd += 1;
+                }
+                if (rands[5] <= lckGrowth && lck < maxLck)
+                {
+                    lck += 1;
+                }
+                if (rands[6] <= defGrowth && def < maxDef)
+                {
+                    def += 1;
+                }
+                if (rands[7] <= resGrowth && res < maxRes)
+                {
+                    res += 1;
+                }
+            }
+        }
+    }
 }

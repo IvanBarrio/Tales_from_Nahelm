@@ -51,22 +51,30 @@ public class GameController : MonoBehaviour
             switch (unit.name)
             {
                 case "Niva":
-                    unit.GetComponent<Character>().createCharacter("Ally", "Niva", "Captain", 23, 13, 5, 9, 11, 8, 8, 5, 20, 1);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().createCharacter("Ally", "Niva", "Captain", 23, 13, 5, 9, 11, 8, 8, 5, 20, 5);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().setStatsMaxs(60, 29, 17, 28, 27, 30, 27, 24);
+                    unit.GetComponent<Character>().setStatsGrowth(80, 75, 25, 60, 50, 55, 45, 20);
                     unit.GetComponent<Weapon>().setWeapon("Northern Axe", "Axe", "A", 10, 1, 65, 0);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     break;
                 case "Aki":
-                    unit.GetComponent<Character>().createCharacter("Ally", "Aki", "Nomad", 23, 8, 6, 10, 12, 7, 7, 7, 20, 1);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().createCharacter("Ally", "Aki", "Nomad", 23, 8, 6, 10, 12, 7, 7, 7, 20, 5);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().setStatsMaxs(60, 24, 19, 29, 31, 32, 22, 23);
+                    unit.GetComponent<Character>().setStatsGrowth(80, 40, 25, 65, 70, 60, 35, 20);
                     unit.GetComponent<Weapon>().setWeapon("Light Blade", "Sword", "A", 9, 1, 90, 30);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     break;
                 case "Hilda":
-                    unit.GetComponent<Character>().createCharacter("Ally", "Hilda", "Berserk", 31, 14, 4, 6, 13, 6, 7, 4, 30, 1);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().createCharacter("Ally", "Hilda", "Berserk", 31, 14, 4, 6, 13, 6, 7, 4, 30, 2);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().setStatsMaxs(80, 54, 27, 37, 43, 45, 36, 29);
+                    unit.GetComponent<Character>().setStatsGrowth(90, 80, 25, 55, 50, 55, 40, 20);
                     unit.GetComponent<Weapon>().setWeapon("Siegfried's Lance", "Lance", "A", 11, 1, 80, 10);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     break;
                 case "Ann":
-                    unit.GetComponent<Character>().createCharacter("Ally", "Ann", "Priestess", 17, 8, 10, 8, 9, 8, 8, 5, 20, 1);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().createCharacter("Ally", "Ann", "Priestess", 17, 8, 10, 8, 9, 8, 8, 5, 20, 5);//faltan los crecimientos y los totales
+                    unit.GetComponent<Character>().setStatsMaxs(60, 24, 28, 25, 27, 29, 24, 26);
+                    unit.GetComponent<Character>().setStatsGrowth(60, 55, 65, 50, 55, 55, 35, 30);
                     unit.GetComponent<Weapon>().setWeapon("Aestus", "Sword", "A", 10, 1, 80, 0);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     unit.GetComponent<Character>().obtainObject(new Item("Staff"));
@@ -108,11 +116,6 @@ public class GameController : MonoBehaviour
         selectedCharacter = "";
         menuState = 0;
         goBack = true;
-        /*Todo
-          * Inicializar un par de enemigos y un pj de jugador
-          * Inicializar armas para cada uno de los personajes creados
-          * Empezar a controlar los turnos empezando por el primer turno jugador
-        */
     }
 
     // Update is called once per frame
