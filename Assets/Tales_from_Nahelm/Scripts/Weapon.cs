@@ -17,6 +17,7 @@ public class Weapon : Item
     public void setWeapon(string n, string t, string s, int a, int r, int h, int c)
     {
         weaponName = n;
+        iName = n;
         type = t;
         skill = s;
         atk = a;

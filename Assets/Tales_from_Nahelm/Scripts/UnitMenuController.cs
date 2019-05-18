@@ -53,11 +53,11 @@ public class UnitMenuController : MonoBehaviour
                 cmdHeal.SetActive(false);
 
             GameObject[] en = gc.getEnemiesInRange(GameObject.Find(selChar).transform.position, 4f, GameObject.Find(selChar).tag); //El rang que es passa sera el rang que tingui l'arma d'atac
-            if (en[0] == null)
+            if (en[0] == null || en.Length == 0)
                cmdAttack.SetActive(false);
 
             GameObject[] al = gc.getAliesInRange(GameObject.Find(selChar).transform.position, 4f, GameObject.Find(selChar).tag); //El rang que es passa sera el rang que tingui l'arma d'atac
-            if (al[0] == null)
+            if (al[0] == null ||al.Length == 0)
                cmdTrade.SetActive(false);
             /*
              * Si el general enemic segueix en peu no es pot conquerir el castell. Quan el general enemic mori la opció de conquerir serà habilitada.

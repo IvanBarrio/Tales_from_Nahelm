@@ -23,6 +23,8 @@ public class GameController : MonoBehaviour
     float timer = 5.0f;
     bool goBack;
     char nextTurn;
+    bool playerUnitMissed;
+    string whoIsAttacking;
 
     // Start is called before the first frame update
     void Start()
@@ -30,6 +32,8 @@ public class GameController : MonoBehaviour
         /*
          * Hay que generar los valores reales de las estadisticas de los personajes
          */
+
+        GameObject go;              //Variable que emprarem per generar els diferents objectes de les unitats
 
         GameObject.Find("UnitName").GetComponent<Text>().enabled = false;
         GameObject.Find("Live").GetComponent<Text>().enabled = false;
@@ -45,6 +49,8 @@ public class GameController : MonoBehaviour
         Debug.Log("Empezamos!");
         Debug.Log("Inicializamos aliados!");
         GameObject[] alies = GameObject.FindGameObjectsWithTag("Ally");
+        Item staff = new Item();
+        staff.setName("Staff");
 
         foreach (GameObject unit in alies)
         {
@@ -56,6 +62,10 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().setStatsGrowth(80, 75, 25, 60, 50, 55, 45, 20);
                     unit.GetComponent<Weapon>().setWeapon("Northern Axe", "Axe", "A", 10, 1, 65, 0);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
+                    go = new GameObject("NivaVulnerary");
+                    go.AddComponent<Item>().setName("Vulnerary");
+                    go.transform.SetParent(unit.transform);
+                    unit.GetComponent<Character>().obtainObject(go.GetComponent<Item>());
                     break;
                 case "Aki":
                     unit.GetComponent<Character>().createCharacter("Ally", "Aki", "Nomad", 23, 8, 6, 10, 12, 7, 7, 7, 20, 5);//faltan los crecimientos y los totales
@@ -63,6 +73,10 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().setStatsGrowth(80, 40, 25, 65, 70, 60, 35, 20);
                     unit.GetComponent<Weapon>().setWeapon("Light Blade", "Sword", "A", 9, 1, 90, 30);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
+                    go = new GameObject("AkiVulnerary");
+                    go.AddComponent<Item>().setName("Vulnerary");
+                    go.transform.SetParent(unit.transform);
+                    unit.GetComponent<Character>().obtainObject(go.GetComponent<Item>());
                     break;
                 case "Hilda":
                     unit.GetComponent<Character>().createCharacter("Ally", "Hilda", "Berserk", 31, 14, 4, 6, 13, 6, 7, 4, 30, 2);//faltan los crecimientos y los totales
@@ -70,6 +84,10 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().setStatsGrowth(90, 80, 25, 55, 50, 55, 40, 20);
                     unit.GetComponent<Weapon>().setWeapon("Siegfried's Lance", "Lance", "A", 11, 1, 80, 10);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
+                    go = new GameObject("HildaVulnerary");
+                    go.AddComponent<Item>().setName("Vulnerary");
+                    go.transform.SetParent(unit.transform);
+                    unit.GetComponent<Character>().obtainObject(go.GetComponent<Item>());
                     break;
                 case "Ann":
                     unit.GetComponent<Character>().createCharacter("Ally", "Ann", "Priestess", 17, 8, 10, 8, 9, 8, 8, 5, 20, 5);//faltan los crecimientos y los totales
@@ -77,7 +95,20 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().setStatsGrowth(60, 55, 65, 50, 55, 55, 35, 30);
                     unit.GetComponent<Weapon>().setWeapon("Aestus", "Sword", "A", 10, 1, 80, 0);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
-                    unit.GetComponent<Character>().obtainObject(new Item("Staff"));
+                    go = new GameObject("AnnStaff");
+                    go.AddComponent<Item>().setName("Staff");
+                    go.transform.SetParent(unit.transform);
+                    unit.GetComponent<Character>().obtainObject(go.GetComponent<Item>());
+
+                    go = new GameObject("AnnVulnerary");
+                    go.AddComponent<Item>().setName("Vulnerary");
+                    go.transform.SetParent(unit.transform);
+                    unit.GetComponent<Character>().obtainObject(go.GetComponent<Item>());
+
+                    go = new GameObject("Elfire");
+                    go.AddComponent<Weapon>().setWeapon("Elfire", "Magic", "E", 2, 2, 90, 0);
+                    go.transform.SetParent(unit.transform);
+                    unit.GetComponent<Character>().obtainObject(go.GetComponent<Weapon>());
                     break;
             }
         }
@@ -98,7 +129,10 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().createCharacter("Enemy", "Ardsede", "Sorcerer", 21, 8, 0, 13, 12, 0, 5, 1, 20, 1);//todo
                     unit.GetComponent<Weapon>().setWeapon("Armads", "Axe", "A", 17, 1, 80, 10);//todo
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
-                    unit.GetComponent<Character>().obtainObject(new Item("Staff"));
+                    go = new GameObject("ArdsedeStaff");
+                    go.AddComponent<Item>().setName("Staff");
+                    go.transform.SetParent(unit.transform);
+                    unit.GetComponent<Character>().obtainObject(go.GetComponent<Item>());
                     break;
                 default:
                     //Hacer un generador aleatorio de diferentes tipos de unidades para los soldados / Que lo mire dependiendo de las armas que lleve
@@ -286,7 +320,7 @@ public class GameController : MonoBehaviour
                                         bool isInRange = false;
                                         foreach (GameObject e in en)
                                         {
-                                            if (e.name == hit.collider.name)
+                                            if (e!= null && e.name == hit.collider.name)
                                             {
                                                 isInRange = true;
                                             }
@@ -385,7 +419,10 @@ public class GameController : MonoBehaviour
                 if (selAICharacter == null)
                 {
                     selAICharacter = findUnitWithClosestThreads();
-                    flagIA = false;
+                    if (selAICharacter == null)
+                        disableUnit();
+                    else
+                        flagIA = false;
                 }
                 else
                 {
@@ -395,11 +432,16 @@ public class GameController : MonoBehaviour
                             if (!flagIA)
                             {
                                 flagIA = true;   //Bloquejem l'accés al bloc d'execució per a que no entri a cada frame quan s'executi l'Update.
-                                GameObject closest = getClosestThread(selAICharacter.transform.position, selAICharacter.tag);
+                                GameObject closest = getClosestThread(selAICharacter.transform.position, selAICharacter.tag, selAICharacter);
                                 initialmovementPoint = selAICharacter.transform.position;
                                 destination = closest.transform.position;
                                 GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); //El rang que es passa sera el rang que tingui l'arma d'atac
-                                if (en[0] != null)
+                                bool rangedEn = false;
+                                foreach (GameObject e in en)
+                                {
+                                    if (e != null) rangedEn = true;
+                                }
+                                if(rangedEn)
                                 {
                                     int tots = 0;
                                     bool hiEs = false;
@@ -461,23 +503,40 @@ public class GameController : MonoBehaviour
                                     flagIA = false;
                                     selAICharacter.GetComponent<NavMeshAgent>().isStopped = true;
                                     GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); //El rang que es passa sera el rang que tingui l'arma d'atac
-                                    if (en[0] == enemyTarget)
+
+                                    bool rangedEn = false;
+                                    foreach (GameObject e in en)
                                     {
+                                        if (e != null) rangedEn = true;
+                                    }
+                                    if (rangedEn)
+                                    { 
+                                        bool hiEs = false;
+                                        int i = 0;
+                                        do
+                                        {
+                                            if (en[i] == enemyTarget)
+                                                hiEs = true;
+                                            else
+                                                i++;
+                                        } while (hiEs == false && i < en.Length);
+
+                                        if (i == en.Length) i = 0;  //Si l'enemic seleccionat no es troba dins de la llista atacara al primer que trobi a rang
+                                    
                                         Debug.Log("Es pot atacar a un enemic!");
-                                        //De moment com només tenim una unitat aliada i una unitat enemiga farem que realitzi l'atac directament.
-                                        Debug.Log(selAICharacter.name + " es disposa a atacar a " + en[0].name);
-                                        int dead = combatTurn(selAICharacter.GetComponent<Character>(), en[0].GetComponent<Character>());
+                                        Debug.Log(selAICharacter.name + " es disposa a atacar a " + en[i].name);
+                                        int dead = combatTurn(selAICharacter.GetComponent<Character>(), en[i].GetComponent<Character>());
                                         switch (dead)
                                         {
                                             case 1:
-                                                Debug.Log(en[0].name + " a matat a " + selAICharacter.name + " en combat.");
+                                                Debug.Log(en[i].name + " a matat a " + selAICharacter.name + " en combat.");
                                                 selAICharacter.GetComponent<Character>().setIsDead(true);
                                                 GameObject.Destroy(selAICharacter);
                                                 break;
                                             case 2:
-                                                Debug.Log(selAICharacter.name + " a matat a " + en[0].name + " en combat.");
+                                                Debug.Log(selAICharacter.name + " a matat a " + en[i].name + " en combat.");
                                                 en[0].GetComponent<Character>().setIsDead(true);
-                                                GameObject.Destroy(en[0]);
+                                                GameObject.Destroy(en[i]);
                                                 break;
                                         }
                                         checkUnits();
@@ -516,6 +575,7 @@ public class GameController : MonoBehaviour
             selAICharacter = null;
         }
         unitsToMove = getActiveUnits();
+        if (actualTurn == 'A' && turnState != 'G') turnState = 'I';
         if (unitsToMove == 0 && turnState != 'G')
         {
             switch (actualTurn)
@@ -538,7 +598,6 @@ public class GameController : MonoBehaviour
             timer = 5.0f;
             turnState = 'T';
         }
-        
     }
 
     public char getTurnState()
@@ -631,6 +690,7 @@ public class GameController : MonoBehaviour
 
         int atkmode = 0;    //Variable que indicara qui realitzara el doble atac en cas de poder-se realitzar (1-> l'atacant, 2-> l'atacat, 0-> Cap d'ells)
         bool recIsDead = false;
+        playerUnitMissed = false;
 
         if (starter.getSpd() >= (recieber.getSpd() + 5))
         {
@@ -649,35 +709,86 @@ public class GameController : MonoBehaviour
         GameObject.Find("BattleRes2").GetComponent<Text>().enabled = true;
         GameObject.Find("BattleRes3").GetComponent<Text>().enabled = true;
 
+        playerUnitMissed = true;
+
         //Ataca l'atacant
+        if (isAnAlly(starter.getCharName()))
+            whoIsAttacking = "Ally";
+        else
+            whoIsAttacking = "Enemy";
         recIsDead = realizeAtack(starter, recieber);
-        if (recIsDead) return 2;
+        if (recIsDead)
+        {
+            if (whoIsAttacking == "Ally")
+            {
+                starter.lvlUp(experienceGainedInBattle(starter, recieber, recIsDead, playerUnitMissed));
+            }
+            return 2;
+        }
         //Ataca l'atacat
+        if (isAnAlly(recieber.getCharName()))
+            whoIsAttacking = "Ally";
+        else
+            whoIsAttacking = "Enemy";
         recIsDead = realizeAtack(recieber, starter);
-        if (recIsDead) return 1;
+        if (recIsDead)
+        {
+            if (whoIsAttacking == "Ally")
+            {
+                recieber.lvlUp(experienceGainedInBattle(recieber, starter, recIsDead, playerUnitMissed));
+            }
+            return 1;
+        }
 
         switch (atkmode)
         {
             case 1:
+                if (isAnAlly(starter.getCharName()))
+                    whoIsAttacking = "Ally";
+                else
+                    whoIsAttacking = "Enemy";
                 recIsDead = realizeAtack(starter, recieber);
-                if (recIsDead) return 2;
+                if (recIsDead)
+                {
+                    if (whoIsAttacking == "Ally")
+                    {
+                        starter.lvlUp(experienceGainedInBattle(starter, recieber, recIsDead, playerUnitMissed));
+                    }
+                    return 2;
+                }
                 break;
             case 2:
+                if (isAnAlly(recieber.getCharName()))
+                    whoIsAttacking = "Ally";
+                else
+                    whoIsAttacking = "Enemy";
                 recIsDead = realizeAtack(recieber, starter);
-                if (recIsDead) return 1;
+                if (recIsDead)
+                {
+                    if (whoIsAttacking == "Ally")
+                    {
+                        recieber.lvlUp(experienceGainedInBattle(recieber, starter, recIsDead, playerUnitMissed));
+                    }
+                    return 1;
+                }
                 break;
         }
+        if (isAnAlly(starter.getCharName()))
+            whoIsAttacking = "Ally";
+        else
+            whoIsAttacking = "Enemy";
+        if (whoIsAttacking == "Ally")
+        {
+            starter.lvlUp(experienceGainedInBattle(starter, recieber, recIsDead, playerUnitMissed));
+        }
+        else
+        {
+            recieber.lvlUp(experienceGainedInBattle(recieber, starter, recIsDead, playerUnitMissed));
+        }
+        
+        whoIsAttacking = "";
 
         return 0;
-        //Decidida la sequencia de ataques hay que realizar los calculos del ataque
-            //Sera critico?
-                //Si -> daño x3
-                //No -> Fallara el ataque?
-                    //No -> Se calcula el daño
-                    //Si -> no se realizan mas calculos
-                    //Muere el enemigo al recibir el ataque?
-                        //No -> Inicia su ataque (Repetir anteriores)
-                        //Si -> Se acaba el combate
     }
 
     public bool realizeAtack(Character st, Character re)
@@ -712,6 +823,14 @@ public class GameController : MonoBehaviour
         if (isAHit)
         {
             damageToEnemy = atckStats[1] * critical;
+        }
+        if (!isAHit && whoIsAttacking == "Ally" && playerUnitMissed)
+        {
+            playerUnitMissed = true;
+        }
+        else
+        {
+            playerUnitMissed = false;
         }
 
         if (critical == 3)
@@ -756,11 +875,14 @@ public class GameController : MonoBehaviour
 
         foreach (GameObject unit in units)
         {
-            ct = getEnemiesInRange(unit.transform.position, 24, unit.tag).Length;   //Busquem el nombre d'enemic en rang d'atac màxim
-            if (ct > ctant)
+            if (unit.GetComponent<Character>().gethasActions())
             {
-                un = unit;
-                ctant = ct;
+                ct = getEnemiesInRange(unit.transform.position, 24, unit.tag).Length;   //Busquem el nombre d'enemic en rang d'atac màxim
+                if (ct > ctant)
+                {
+                    un = unit;
+                    ctant = ct;
+                }
             }
         }
         return un;
@@ -769,12 +891,15 @@ public class GameController : MonoBehaviour
     /*
      * Funció que retorna l'enemic més proper a la unitat (Més endevant aquesta amenaça no ha de ser la unitat més propera sino la que mes dany pugui causar)
      */
-    public GameObject getClosestThread(Vector3 pos, string tag)
+    public GameObject getClosestThread(Vector3 pos, string tag, GameObject centerUn)
     {
         GameObject[] enemies = null;
         GameObject enInRange = null;
+        GameObject[] closestThread = new GameObject[20];
+        string weaponWeakness = "";
         int i = 0;
         float minDistance = -1;
+
         switch (tag)
         {
             case "Ally":
@@ -790,8 +915,47 @@ public class GameController : MonoBehaviour
             if (minDistance == -1) minDistance = Vector3.Distance(unit.transform.position, pos);
             if (Vector3.Distance(unit.transform.position, pos) <= minDistance)
             {
-                enInRange = unit;
+                closestThread[i] = unit;
                 i++;
+            }
+        }
+        switch (centerUn.GetComponent<Character>().getEquipedWeapon().getType())
+        {
+            case "Sword":
+                weaponWeakness = "Axe";
+                break;
+            case "Lance":
+                weaponWeakness = "Sword";
+                break;
+            case "Axe":
+                weaponWeakness = "Lance";
+                break;
+        }
+        minDistance = -1;
+        foreach (GameObject un in closestThread)
+        {
+            if (un != null)
+            {
+                if (minDistance == -1)
+                {
+                    enInRange = un;
+                    minDistance = Vector3.Distance(un.transform.position, pos);
+                }
+                else
+                {
+                    if (un.GetComponent<Character>().getEquipedWeapon().getType() == weaponWeakness)
+                    {
+                        enInRange = un;
+                    }
+                    else
+                    {
+                        if (Vector3.Distance(un.transform.position, pos) <= minDistance)
+                        {
+                            enInRange = un;
+                            i++;
+                        }
+                    }
+                }
             }
         }
         return enInRange;
@@ -927,4 +1091,81 @@ public class GameController : MonoBehaviour
         GameObject.Find("GAMEOVER").GetComponent<Text>().color = Color.blue;
         turnState = 'G';
     }
+
+    /*
+     * Funció que calcula la quantitat d'experiencia guanyada en una batalla
+     */
+    public int experienceGainedInBattle(Character unit, Character enemy, bool kill, bool missed)
+    {
+        int ld = 0;     //Variable que ens informarà de la diferencia de nivells entre la unitat i l'enemic
+        int exp = 0;    //Variable que ens indicarà quanta experiencia guaña en total.
+        int bonus = 0;
+
+        if (missed)
+        {
+            //Si la unitat falla tots els atacs no aconsegueix experiencia
+            exp = 0;
+        }
+        else
+        {
+            //Si no ha fallat el cop calculem la diferencia de nivells
+            if (enemy.name == "Omak" || enemy.name == "Ardsede")
+            {
+                //Si l'enemic es un enemic especial apliquem bonificadors als resultats
+                ld = (enemy.getLvl() + 20) - unit.getLvl();
+                bonus = 20;
+            }
+            else
+            {
+                ld = enemy.getLvl() - unit.getLvl();
+            }
+            if (kill)
+            {
+                //La unitat mata a l'enemic
+                if (ld >= 0)
+                {
+                    exp = 20 + (ld * 3) + bonus;
+                }
+                else if (ld == -1)
+                {
+                    exp = 20 + bonus;
+                }
+                else if (ld <= -2)
+                {
+                    exp = Mathf.Max((26+(ld)*3)+bonus ,7);
+                }
+            }
+            else
+            {
+                //La unitat no ha matat a l'enemic
+                if (ld >= 0)
+                {
+                    exp = (31 + ld) / 3;
+                }
+                else if (ld == -1)
+                {
+                    exp = 10;
+                }
+                else if (ld <= -2)
+                {
+                    exp = Mathf.Max((33 + ld) / 3, 1);
+                }
+            }
+        }
+
+        return exp;
+    }
+
+    public bool isAnAlly(string name)
+    {
+        GameObject ally = GameObject.Find(name);
+
+        if (name == "Therthas Soldier") return false;
+
+        if (ally.tag == "Ally")
+            return true;
+        else
+            return false;
+    }
+
 }

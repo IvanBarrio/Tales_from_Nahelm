@@ -73,7 +73,7 @@ public class Character : MonoBehaviour
     }
 
     //Setters
-
+ 
     public void setStatsMaxs(int pvm, int strm, int magm, int sklm, int spdm, int lckm, int defm, int resm)
     {
         this.maxPv = pvm;
@@ -120,6 +120,17 @@ public class Character : MonoBehaviour
     }
 
     //Getters
+
+    public string getCharName()
+    {
+        return this.charName;
+    }
+
+    public int getLvl()
+    {
+        return this.lvl;
+    }
+
     public int getDef()
     {
         return def;
@@ -263,7 +274,7 @@ public class Character : MonoBehaviour
         bool hasIt = false;
         foreach (Item obj in inventory)
         {
-            if (obj.getName().Equals(name))
+            if (obj != null && obj.getName() == name)
             {
                 hasIt = true;
             }
@@ -277,14 +288,14 @@ public class Character : MonoBehaviour
     public void obtainObject(Item i)
     {
         int lastInvSp = 0;
-        while (lastInvSp != 99)
+        while (lastInvSp < 99)
         {
             if (inventory[lastInvSp] == null)
             {
                 inventory[lastInvSp] = i;
                 lastInvSp = 99;
-            }
-            lastInvSp++;
+            }else
+                lastInvSp++;
         }
     }
 
@@ -344,5 +355,6 @@ public class Character : MonoBehaviour
                 }
             }
         }
+        Debug.Log(charName + " LVL: " + lvl + " Exp: " + exp);
     }
 }

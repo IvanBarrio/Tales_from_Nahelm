@@ -4,19 +4,11 @@ using UnityEngine;
 
 public class Item : MonoBehaviour
 {
-    private string iName;
-
-    public Item()
-    { }
-
-    public Item(string name)
-    {
-        this.iName = name;
-    }
+    protected string iName;
 
     public string getName()
     {
-        return name;
+        return iName;
     }
 
     public void setName(string name)
