@@ -45,7 +45,10 @@ public class GameController : MonoBehaviour
         GameObject.Find("BattleRes3").GetComponent<Text>().enabled = false;
         GameObject.Find("TurnShow").GetComponent<Text>().enabled = false;
         GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
-        
+
+        int[] randomStats = new int[10];
+        string[] randomWeapon = new string[7];
+
         Debug.Log("Empezamos!");
         Debug.Log("Inicializamos aliados!");
         GameObject[] alies = GameObject.FindGameObjectsWithTag("Ally");
@@ -126,8 +129,8 @@ public class GameController : MonoBehaviour
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     break;
                 case "Ardsede":
-                    unit.GetComponent<Character>().createCharacter("Enemy", "Ardsede", "Sorcerer", 21, 8, 0, 13, 12, 0, 5, 1, 20, 1);//todo
-                    unit.GetComponent<Weapon>().setWeapon("Armads", "Axe", "A", 17, 1, 80, 10);//todo
+                    unit.GetComponent<Character>().createCharacter("Enemy", "Ardsede", "Sorcerer", 24, 4, 8, 4, 6, 3, 8, 7, 20, 6);
+                    unit.GetComponent<Weapon>().setWeapon("Shadows", "BlackMagic", "C", 4, 2, 60, 50);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     go = new GameObject("ArdsedeStaff");
                     go.AddComponent<Item>().setName("Staff");
@@ -136,8 +139,10 @@ public class GameController : MonoBehaviour
                     break;
                 default:
                     //Hacer un generador aleatorio de diferentes tipos de unidades para los soldados / Que lo mire dependiendo de las armas que lleve
-                    unit.GetComponent<Character>().createCharacter("Enemy", "Therthas Soldier", "Soldier", 22, 8, 4, 7, 9, 0, 7, 10, 20, 1);//todo
-                    unit.GetComponent<Weapon>().setWeapon("Armads", "Axe", "A", 17, 1, 80, 10);//todo
+                    randomStats = getRandomSoldierStats();
+                    unit.GetComponent<Character>().createCharacter("Enemy", "Therthas Soldier", "Soldier", randomStats[0], randomStats[1], randomStats[2], randomStats[3], randomStats[4], randomStats[5], randomStats[6], randomStats[7], randomStats[8], randomStats[9]);
+                    randomWeapon = getRandomWeapon();
+                    unit.GetComponent<Weapon>().setWeapon(randomWeapon[0], randomWeapon[1], randomWeapon[2], int.Parse(randomWeapon[3]), int.Parse(randomWeapon[4]), int.Parse(randomWeapon[5]), int.Parse(randomWeapon[6]));
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     break;
             }
@@ -160,7 +165,7 @@ public class GameController : MonoBehaviour
          */
         if (selectedCharacter != null && selectedCharacter != "")
         {
-            GameObject.Find("UnitName").GetComponent<Text>().text = selectedCharacter;
+            GameObject.Find("UnitName").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getCharName(); ;
             GameObject.Find("ActualLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getActualPV().ToString();
             GameObject.Find("TotalLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getPV().ToString();
             GameObject.Find("UnitInfo").GetComponent<Image>().enabled = true;
@@ -462,22 +467,20 @@ public class GameController : MonoBehaviour
                                     {
                                         Debug.Log("Hi ha més enemics a rang que no són l'amenaça més propera");
                                         enemyTarget = en[0];
+                                        destination = enemyTarget.transform.position;
                                     }
                                     isNotMoving = true;
                                 }
                                 else
                                 {
                                     enemyTarget = closest;
-                                    Debug.Log("No hi ha enemics a rang d'atac");
-                                    var heading = enemyTarget.transform.position - selAICharacter.transform.position;
 
-                                    //De moment es mourá en la direcció a la unitat enemiga a la major distancia que pugui
                                     if (Vector3.Distance(destination, selAICharacter.transform.position) < 20)    //20 es el radi de la esfera i per tant el valor que haurem d'assignar al moviment del personatge
                                     {
                                         selAICharacter.GetComponent<NavMeshAgent>().SetDestination(destination);
                                         selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance = 4;   //Fem que es quedi a una distancia prudencial de la unitat enemiga
                                         selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
-                                        isNotMoving = true;
+                                        isNotMoving = false;
                                     }
                                     else
                                     {
@@ -498,7 +501,8 @@ public class GameController : MonoBehaviour
                                     notMovingDist = Vector3.Distance(destination, initialmovementPoint);
                                 else
                                     notMovingDist = (Vector3.Distance(destination, initialmovementPoint) - 20);
-                                if (Vector3.Distance(destination, selAICharacter.transform.position) <= notMovingDist)
+
+                                if (Vector3.Distance(destination, selAICharacter.transform.position) <= selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance || isNotMoving)//notMovingDist || Vector3.Distance(destination, selAICharacter.transform.position) < 4)
                                 {
                                     flagIA = false;
                                     selAICharacter.GetComponent<NavMeshAgent>().isStopped = true;
@@ -521,7 +525,7 @@ public class GameController : MonoBehaviour
                                                 i++;
                                         } while (hiEs == false && i < en.Length);
 
-                                        if (i == en.Length) i = 0;  //Si l'enemic seleccionat no es troba dins de la llista atacara al primer que trobi a rang
+                                        if (hiEs == false && i == en.Length) i = 0;  //Si l'enemic seleccionat no es troba dins de la llista atacara al primer que trobi a rang
                                     
                                         Debug.Log("Es pot atacar a un enemic!");
                                         Debug.Log(selAICharacter.name + " es disposa a atacar a " + en[i].name);
@@ -546,6 +550,7 @@ public class GameController : MonoBehaviour
                                         Debug.Log("No hi ha enemics a prop.");
                                     }
                                     enemyTarget = null;
+                                    isNotMoving = false;
                                     disableUnit();
                                 }
                             }
@@ -581,11 +586,11 @@ public class GameController : MonoBehaviour
             switch (actualTurn)
             {
                 case 'P':
+                    activateUnits("Enemy");
                     flagIA = true;
                     actualTurn = 'A';
                     displayTurn();
                     unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
-                    activateUnits("Enemy");
                     break;
                 case 'A':
                     turn++; //Cambiem de torn cada cop que acaba la IA el seu
@@ -866,11 +871,12 @@ public class GameController : MonoBehaviour
      */
     public GameObject findUnitWithClosestThreads()
     {
-        //Falta implementar el sistema de unidades activas e inactivas
+        //De moment passarem qualsevol unitat que estigui activa
         GameObject[] units = GameObject.FindGameObjectsWithTag("Enemy");
 
         GameObject un = null;
-        int ct = 0;
+        int i = 0;
+        /*int ct = 0;
         int ctant = -1;
 
         foreach (GameObject unit in units)
@@ -884,7 +890,14 @@ public class GameController : MonoBehaviour
                     ctant = ct;
                 }
             }
-        }
+        }*/
+        do
+        {
+            if (units[i].GetComponent<Character>().gethasActions())
+                un = units[i];
+            else
+                i++;
+        } while (un == null);
         return un;
     }
 
@@ -1085,6 +1098,9 @@ public class GameController : MonoBehaviour
         menuState = 4;
     }
 
+    /*
+     * Funció que ens inicia l'estat de victoria
+     */
     public void endGameVictory()
     {
         GameObject.Find("GAMEOVER").GetComponent<Text>().text = "VICTORY!";
@@ -1156,6 +1172,9 @@ public class GameController : MonoBehaviour
         return exp;
     }
 
+    /*
+     * Funció que ens indica si una unitat concreta es aliada o enemiga
+     */
     public bool isAnAlly(string name)
     {
         GameObject ally = GameObject.Find(name);
@@ -1167,5 +1186,111 @@ public class GameController : MonoBehaviour
         else
             return false;
     }
+
+    /*
+     * Funció que genera les estadístiques aleatories dels soldats enemics
+     */
+    public int[] getRandomSoldierStats()
+    {
+        int[] stats = new int[10];
+        //Generem el nivell dels soldats (entre 1 i 5)
+        int lvl = Random.Range(1, 5);
+        int growth;
+        //inicialitzem els valors base de la classe, els quals modificarem depenent del nivell generat automaticament.
+        int pv = 16;
+        int str = 3;
+        int mag = 0;
+        int skl = 4;
+        int spd = 6;
+        int lck = 0;
+        int def = 6;
+        int res = 6;
+        int mov = 20;
+
+        if (lvl != 1)
+        {
+            for (int i = 1; i < lvl; i++)
+            {
+                growth = Random.Range(1, 100);
+                if (growth <= 40) pv++;
+
+                growth = Random.Range(1, 100);
+                if (growth <= 10) str++;
+
+                growth = Random.Range(1, 100);
+                if (growth <= 0) mag++;
+
+                growth = Random.Range(1, 100);
+                if (growth <= 10) skl++;
+
+                growth = Random.Range(1, 100);
+                if (growth <= 10) spd++;
+
+                growth = Random.Range(1, 100);
+                if (growth <= 0) lck++;
+
+                growth = Random.Range(1, 100);
+                if (growth <= 5) def++;
+
+                growth = Random.Range(1, 100);
+                if (growth <= 5) res++;
+            }
+        }
+
+        stats[0] = pv;
+        stats[1] = str;
+        stats[2] = mag;
+        stats[3] = skl;
+        stats[4] = spd;
+        stats[5] = lck;
+        stats[6] = def;
+        stats[7] = res;
+        stats[8] = mov;
+        stats[9] = lvl;
+
+        return stats;
+    }
+
+    public string[] getRandomWeapon()
+    {
+        string[] weapon = new string[7];
+
+        switch (Random.Range(1, 3))
+        {
+            case 1:
+                //Generem una espasa
+                weapon[0] = "Steel Sword";
+                weapon[1] = "Sword";
+                weapon[2] = "C";
+                weapon[3] = "8";
+                weapon[4] = "1";
+                weapon[5] = "90";
+                weapon[6] = "0";
+                break;
+            case 2:
+                //Generem una llança
+                weapon[0] = "Steel Lance";
+                weapon[1] = "Lance";
+                weapon[2] = "C";
+                weapon[3] = "9";
+                weapon[4] = "1";
+                weapon[5] = "80";
+                weapon[6] = "0";
+                break;
+            case 3:
+                //Generem una destral
+                weapon[0] = "Steel Axe";
+                weapon[1] = "Axe";
+                weapon[2] = "C";
+                weapon[3] = "11";
+                weapon[4] = "1";
+                weapon[5] = "70";
+                weapon[6] = "0";
+                break;
+        }
+
+        return weapon;
+    }
+
 
 }
