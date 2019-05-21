@@ -119,6 +119,11 @@ public class Character : MonoBehaviour
         this.isDead = isDead;
     }
 
+    public void setEquipedWeapon(Weapon w)
+    {
+        equipedWeapon = w;
+    }
+
     //Getters
 
     public string getCharName()
@@ -167,6 +172,19 @@ public class Character : MonoBehaviour
         return hasActions;
     }
 
+    public Item[] getInventory()
+    {
+        return inventory;
+    }
+
+    public Weapon getSelWeapon()
+    {
+        return equipedWeapon;
+    }
+
+    /*
+     * Funció que calcula el dany realitzat a la unitat
+     */
     public int recieveDamage(int damageDealt)
     {
         actualPV -= damageDealt;
@@ -174,6 +192,9 @@ public class Character : MonoBehaviour
         return actualPV;
     }
 
+    /*
+     * Funció que retorna l'arma equipada
+     */
     public Weapon getEquipedWeapon()
     {
         return equipedWeapon;
@@ -243,6 +264,9 @@ public class Character : MonoBehaviour
         return evasion;
     }
 
+    /*
+     * TO ERASE
+     */
     public void printStats()
     {
         Debug.Log("HP: " + pv);
@@ -255,7 +279,6 @@ public class Character : MonoBehaviour
     }
 
     //Retornem si la unitat pot realitzar accions curatives
-    //Priestess o Sorcerer
     public bool canHeal()
     {
         bool healer = false;
@@ -264,6 +287,15 @@ public class Character : MonoBehaviour
             if (hasInInventory("Staff")) healer = true;
         }
         return healer;
+    }
+
+    /*
+     * Funció que realitza una curació
+     */
+    public void heal(int value)
+    {
+        this.actualPV = actualPV + value;
+        if (actualPV > pv) actualPV = pv;
     }
 
     /*
@@ -356,5 +388,47 @@ public class Character : MonoBehaviour
             }
         }
         Debug.Log(charName + " LVL: " + lvl + " Exp: " + exp);
+    }
+
+    /*
+     * Funció que retorna si la unitat está ferida o no
+     */
+    public bool isInjured()
+    {
+        if (actualPV < pv)
+            return true;
+        else
+            return false;
+    }
+
+    /*
+     * Funció per tirar un objecte
+     */
+    public void dropItem(int i)
+    {
+        inventory[i] = null;
+    }
+
+    /*
+     * Funció per utilitzar un objecte
+     */
+    public bool useItem(int i)
+    {
+        bool used = false;
+        if (inventory[i].getName() == "Vulnerary")
+        {
+            if (actualPV < pv)
+            {
+                actualPV += 10;
+                if (actualPV > pv) actualPV = pv;
+                used = true;
+            }
+        }
+        return used;
+    }
+
+    public Weapon getWeaponInInventory(int i)
+    {
+        return (Weapon) inventory[i];
     }
 }

@@ -10,8 +10,8 @@ public class GameController : MonoBehaviour
     private int turn;                   //Comptador dels torns que s'han realitzat durant la partida (cada cop que passa el torn de l'enemic incrementa en 1
     private char actualTurn;            //Indicador de quin jugador té el torn actualment (P -> jugador | A -> inteligencia artificial)
     private int unitsToMove;            // Comptador de les unitats del jugador amb torn que falten per moure
-    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge ha acabat de moure, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial, W->En espera de la selecció d'acció sobre una unitat, B->Estat de batalla, S->Selecció d'arma per realitzar la batalla, P->Enemic confrimat i inici del combat) //S'ampliaran mes endevant
-    //I-C-A-G-T-D-W-B-S-P
+    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge ha acabat de moure, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial, W->En espera de la selecció d'acció sobre una unitat, B->Estat de batalla, S->Selecció d'arma per realitzar la batalla, P->Enemic confrimat i inici del combat, H->Curació) //S'ampliaran mes endevant
+    //I-C-A-G-T-D-W-B-S-P-H
     private int menuState;              //Variable que controla en quin moment del menu ens trobem per poder tirar enrere accions
     private string selectedCharacter;   //Variable que ens indica quin personatge esta seleccionat en cas d'estar-ho, sino es trobara un valor vuit.
     Vector3 initialmovementPoint;
@@ -40,9 +40,6 @@ public class GameController : MonoBehaviour
         GameObject.Find("ActualLive").GetComponent<Text>().enabled = false;
         GameObject.Find("TotalLive").GetComponent<Text>().enabled = false;
         GameObject.Find("GAMEOVER").GetComponent<Text>().enabled = false;
-        GameObject.Find("BattleRes1").GetComponent<Text>().enabled = false;
-        GameObject.Find("BattleRes2").GetComponent<Text>().enabled = false;
-        GameObject.Find("BattleRes3").GetComponent<Text>().enabled = false;
         GameObject.Find("TurnShow").GetComponent<Text>().enabled = false;
         GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
 
@@ -204,7 +201,7 @@ public class GameController : MonoBehaviour
 
         if (turnState == 'G')//En Game Over sortirem amb qualsevol input tant al teclat com al ratolí
         {
-            if (Input.anyKey)  SceneManager.LoadScene(0);   //Retornem al menu inicial del joc
+            if (Input.anyKey) SceneManager.LoadScene(0);   //Retornem al menu inicial del joc
         }
 
         /*
@@ -237,7 +234,7 @@ public class GameController : MonoBehaviour
                                         GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
                                     }
                                 }
-                                else if(hit.collider.tag == "Enemy")
+                                else if (hit.collider.tag == "Enemy")
                                 {
                                     //Si seleccionem una unitat enemiga podem veure les seves estadístiques
                                     selectedCharacter = hit.collider.name;
@@ -279,7 +276,7 @@ public class GameController : MonoBehaviour
                         break;
                     //Personatge mogut i amb possibilitat d'atacar
                     case 'A':
-                        if (GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().remainingDistance < 0.1f){
+                        if (GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().remainingDistance < 0.1f) {
                             GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().isStopped = true;
 
                             GameObject.Find(selectedCharacter).GetComponent<Character>().setCanMove(false);
@@ -290,7 +287,7 @@ public class GameController : MonoBehaviour
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
 
                             GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
-                                                        
+
                             GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
                         }
                         break;
@@ -303,6 +300,7 @@ public class GameController : MonoBehaviour
                             nextTurn = 'S';
                             turnState = 'T';
                             menuState = 4;
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(true, 'A');
                             timer = 0.5f;
                         }
                         else if (Input.GetMouseButtonDown(0))
@@ -325,7 +323,7 @@ public class GameController : MonoBehaviour
                                         bool isInRange = false;
                                         foreach (GameObject e in en)
                                         {
-                                            if (e!= null && e.name == hit.collider.name)
+                                            if (e != null && e.name == hit.collider.name)
                                             {
                                                 isInRange = true;
                                             }
@@ -333,7 +331,6 @@ public class GameController : MonoBehaviour
                                         //Si l'enemic es toba a rang d'atac de la unitat
                                         if (isInRange)
                                         {
-                                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(true);
                                             enemyTarget = GameObject.Find(hit.collider.name);
                                         }
                                     }
@@ -350,16 +347,31 @@ public class GameController : MonoBehaviour
                             turnState = 'T';
                             timer = 0.5f;
                             nextTurn = 'W';
-                            menuState = 3;
+                            if (GameObject.Find(selectedCharacter).GetComponent<Character>().getCanMove() == true)
+                                menuState = 1;
+                            else
+                                menuState = 3;
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(false, 'A');
                             GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
                             GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
                         }
                         else
                         {
-                            //ToDo - Seleccionar el arma para atacar
-                            turnState = 'B';
-                            menuState = 5;
+                            /*
+                             * Esperar hasta seleccionar el arma
+                             */
+                            if (GameObject.Find("UnitActions").GetComponent<UnitMenuController>().selectedItem)
+                            {
+                                if (GameObject.Find(selectedCharacter).GetComponent<Character>().getWeaponInInventory(GameObject.Find("UnitActions").GetComponent<UnitMenuController>().sItem) != GameObject.Find(selectedCharacter).GetComponent<Character>().getEquipedWeapon())
+                                {
+                                    //Si l'arma seleccionada no coincideix amb la equipada cambiem la equipació del personatge i continuem
+                                    GameObject.Find(selectedCharacter).GetComponent<Character>().setEquipedWeapon(GameObject.Find(selectedCharacter).GetComponent<Character>().getWeaponInInventory(GameObject.Find("UnitActions").GetComponent<UnitMenuController>().sItem));
+                                }    
+                                GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(false, 'A');
+                                turnState = 'B';
+                                menuState = 5;
+                            }
                         }
                         break;
                     //Comença el combat contra l'enemic seleccionat
@@ -385,6 +397,57 @@ public class GameController : MonoBehaviour
                         enemyTarget = null;
                         disableUnit();
                         break;
+                    //Curem a un aliat amb màgia
+                    case 'H':
+                        if (Input.GetKey(KeyCode.Escape) && menuState == 6 && goBack)
+                        {
+                            //Si ens trobem en la seleccio d'enemic tornem a la seleccio d'arma
+                            goBack = false;
+                            nextTurn = 'W';
+                            turnState = 'T';
+                            if (GameObject.Find(selectedCharacter).GetComponent<Character>().getCanMove() == true)
+                                menuState = 1;
+                            else
+                                menuState = 3;
+                            timer = 0.5f;
+                        }
+                        else if (Input.GetMouseButtonDown(0))
+                        {
+                            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                            RaycastHit hit;
+                            if (Physics.Raycast(ray, out hit))
+                            {
+                                //Si pulsem sobre un enemic
+                                if (hit.collider.tag == "Ally")
+                                {
+                                    if (selectedCharacter != hit.collider.name)
+                                    {
+                                        turnState = 'I';
+                                        GameObject[] al = getAliesInRange(GameObject.Find(selectedCharacter).transform.position, 4f, GameObject.Find(selectedCharacter).tag); //El rang que es passa sera el rang que tingui l'arma d'atac
+                                        bool isInRange = false;
+                                        foreach (GameObject a in al)
+                                        {
+                                            if (a != null && a.name == hit.collider.name)
+                                            {
+                                                isInRange = true;
+                                            }
+                                        }
+                                        //Si l'aliat seleccionat es troba a rang i necessita curacions
+                                        if (isInRange && GameObject.Find(hit.collider.name).GetComponent<Character>().isInjured())
+                                        {
+                                            GameObject.Find(hit.collider.name).GetComponent<Character>().heal(GameObject.Find(selectedCharacter).GetComponent<Character>().magicHealing());
+                                            checkUnits();
+                                            GameObject.Find(selectedCharacter).GetComponent<Character>().SetHasActions(false);
+                                            selectedCharacter = "";
+                                            enemyTarget = null;
+                                            disableUnit();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    //Esperem a alguna acció del jugador
                     case 'W':
                         if (Input.GetKey(KeyCode.Escape) && goBack)
                         {
@@ -413,8 +476,31 @@ public class GameController : MonoBehaviour
                                     nextTurn = 'C';
                                     GameObject.Find("MovementArea").transform.position = new Vector3(initialmovementPoint.x, GameObject.Find("MovementArea").transform.position.y, initialmovementPoint.z);
                                     break;
-                                    // case 6 puede ser para salir del inventario
-                                    // case 7 para salir de los intercanvios
+                                case 6:
+                                    //L'inventari està en pantalla i es vol tornar a la selecció d'accions
+                                    goBack = false;
+                                    turnState = 'T';
+                                    timer = 0.5f;
+                                    nextTurn = 'W';
+                                    if (GameObject.Find(selectedCharacter).GetComponent<Character>().getCanMove() == true)
+                                        menuState = 1;  //Si la unitat no s'ha mogut
+                                    else
+                                        menuState = 3;  //Si la unitat s'ha mogut
+                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
+                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(false, 'I');
+                                    break;
+
+                                case 7:
+                                    //La pantalla d'us d'objectes està activa i volem tornar a la selecció d'objectes
+                                    goBack = false;
+                                    turnState = 'T';
+                                    timer = 0.5f;
+                                    nextTurn = 'W';
+                                    menuState = 6;
+                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(true, 'X');
+                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayItemUsage(false, 0);
+                                    break;
+
                             }
                         }
                         break;
@@ -440,13 +526,13 @@ public class GameController : MonoBehaviour
                                 GameObject closest = getClosestThread(selAICharacter.transform.position, selAICharacter.tag, selAICharacter);
                                 initialmovementPoint = selAICharacter.transform.position;
                                 destination = closest.transform.position;
-                                GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); //El rang que es passa sera el rang que tingui l'arma d'atac
+                                GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag);
                                 bool rangedEn = false;
                                 foreach (GameObject e in en)
                                 {
                                     if (e != null) rangedEn = true;
                                 }
-                                if(rangedEn)
+                                if (rangedEn)
                                 {
                                     int tots = 0;
                                     bool hiEs = false;
@@ -482,6 +568,10 @@ public class GameController : MonoBehaviour
                                         selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
                                         isNotMoving = false;
                                     }
+                                    else if (Vector3.Distance(destination, selAICharacter.transform.position) > 50 || selAICharacter.name == "Omak")// Si la unitat es troba a molta distancia de les unitats aliades o es el cap no es mouran
+                                    {
+                                        isNotMoving = true;
+                                    }
                                     else
                                     {
                                         selAICharacter.GetComponent<NavMeshAgent>().SetDestination(destination);
@@ -502,11 +592,11 @@ public class GameController : MonoBehaviour
                                 else
                                     notMovingDist = (Vector3.Distance(destination, initialmovementPoint) - 20);
 
-                                if (Vector3.Distance(destination, selAICharacter.transform.position) <= selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance || isNotMoving)//notMovingDist || Vector3.Distance(destination, selAICharacter.transform.position) < 4)
+                                if (Vector3.Distance(destination, selAICharacter.transform.position) <= selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance || isNotMoving)
                                 {
                                     flagIA = false;
                                     selAICharacter.GetComponent<NavMeshAgent>().isStopped = true;
-                                    GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); //El rang que es passa sera el rang que tingui l'arma d'atac
+                                    GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); 
 
                                     bool rangedEn = false;
                                     foreach (GameObject e in en)
@@ -514,7 +604,7 @@ public class GameController : MonoBehaviour
                                         if (e != null) rangedEn = true;
                                     }
                                     if (rangedEn)
-                                    { 
+                                    {
                                         bool hiEs = false;
                                         int i = 0;
                                         do
@@ -526,7 +616,7 @@ public class GameController : MonoBehaviour
                                         } while (hiEs == false && i < en.Length);
 
                                         if (hiEs == false && i == en.Length) i = 0;  //Si l'enemic seleccionat no es troba dins de la llista atacara al primer que trobi a rang
-                                    
+
                                         Debug.Log("Es pot atacar a un enemic!");
                                         Debug.Log(selAICharacter.name + " es disposa a atacar a " + en[i].name);
                                         int dead = combatTurn(selAICharacter.GetComponent<Character>(), en[i].GetComponent<Character>());
@@ -664,7 +754,7 @@ public class GameController : MonoBehaviour
         int enNmbr = 0;
 
         enemies = GameObject.FindGameObjectsWithTag(tag);
-                
+
 
         enNmbr = enemies.Length;
         GameObject[] enInRange = new GameObject[enNmbr];
@@ -679,10 +769,6 @@ public class GameController : MonoBehaviour
         }
         return enInRange;
     }
-
-    /*
-     * Crear una función para la generación de unidades enemigas como refuerzos
-     */
 
     /*
      * Crear una función para la ejecucion de los combates entre 2 personajes
@@ -705,14 +791,6 @@ public class GameController : MonoBehaviour
         {
             atkmode = 2;
         }
-
-        GameObject.Find("BattleRes1").GetComponent<Text>().text = "";
-        GameObject.Find("BattleRes2").GetComponent<Text>().text = "";
-        GameObject.Find("BattleRes3").GetComponent<Text>().text = "";
-
-        GameObject.Find("BattleRes1").GetComponent<Text>().enabled = true;
-        GameObject.Find("BattleRes2").GetComponent<Text>().enabled = true;
-        GameObject.Find("BattleRes3").GetComponent<Text>().enabled = true;
 
         playerUnitMissed = true;
 
@@ -790,7 +868,7 @@ public class GameController : MonoBehaviour
         {
             recieber.lvlUp(experienceGainedInBattle(recieber, starter, recIsDead, playerUnitMissed));
         }
-        
+
         whoIsAttacking = "";
 
         return 0;
@@ -817,7 +895,7 @@ public class GameController : MonoBehaviour
         if (!isAHit)
         {
             //Es realitza l'atac normal?
-            
+
             randV = Random.Range(1, 100);
             if (randV <= atckStats[0] && randV != 0)
             {
@@ -853,13 +931,7 @@ public class GameController : MonoBehaviour
             resText = "L'atac de " + st.name + " ha fallat.";
             Debug.Log("L'atac de " + st.name + " ha fallat.");
         }
-        if (GameObject.Find("BattleRes1").GetComponent<Text>().text == "")
-            GameObject.Find("BattleRes1").GetComponent<Text>().text = resText;
-        else if (GameObject.Find("BattleRes2").GetComponent<Text>().text == "")
-            GameObject.Find("BattleRes2").GetComponent<Text>().text = resText;
-        else
-            GameObject.Find("BattleRes3").GetComponent<Text>().text = resText;
-
+        
         //Realitzar el dany a l'enemic
         reHP = re.recieveDamage(damageToEnemy);
         if (reHP == 0) isDead = true;
@@ -876,21 +948,7 @@ public class GameController : MonoBehaviour
 
         GameObject un = null;
         int i = 0;
-        /*int ct = 0;
-        int ctant = -1;
 
-        foreach (GameObject unit in units)
-        {
-            if (unit.GetComponent<Character>().gethasActions())
-            {
-                ct = getEnemiesInRange(unit.transform.position, 24, unit.tag).Length;   //Busquem el nombre d'enemic en rang d'atac màxim
-                if (ct > ctant)
-                {
-                    un = unit;
-                    ctant = ct;
-                }
-            }
-        }*/
         do
         {
             if (units[i].GetComponent<Character>().gethasActions())
@@ -981,7 +1039,7 @@ public class GameController : MonoBehaviour
     {
         GameObject[] alies = GameObject.FindGameObjectsWithTag("Ally");
         int alive = 0;
-        
+
         foreach (GameObject unit in alies)
         {
             if (!unit.GetComponent<Character>().getisDead()) alive++;
@@ -994,9 +1052,15 @@ public class GameController : MonoBehaviour
             Debug.Log("GAME OVER, ja no et queden unitats per continuar.");
         }
     }
+
     /*
-     * Crear una función para la ejecucion de las curaciones entre dos personajes
+     * Funció que inicialitza la curació a una unitat amb màgia
      */
+    public void healAlly()
+    {
+        menuState = 6;
+        turnState = 'H';
+    }
 
     /*
      * Funció per activar totes les unitats a l'inici del torn
@@ -1148,7 +1212,7 @@ public class GameController : MonoBehaviour
                 }
                 else if (ld <= -2)
                 {
-                    exp = Mathf.Max((26+(ld)*3)+bonus ,7);
+                    exp = Mathf.Max((26 + (ld) * 3) + bonus, 7);
                 }
             }
             else
@@ -1292,5 +1356,24 @@ public class GameController : MonoBehaviour
         return weapon;
     }
 
+    public void setMenuState(int state)
+    {
+        this.menuState = state;
+    }
 
+    public void dropItem(int i)
+    {
+        GameObject.Find(selectedCharacter).GetComponent<Character>().dropItem(i);
+        GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayItemUsage(false, 0);
+        deactivateUnit();
+    }
+
+    public void useItem(int i)
+    {
+        if (GameObject.Find(selectedCharacter).GetComponent<Character>().useItem(i))
+        {
+            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayItemUsage(false, 0);
+            deactivateUnit();
+        }
+    }
 }

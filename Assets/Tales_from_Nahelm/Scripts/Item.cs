@@ -5,6 +5,7 @@ using UnityEngine;
 public class Item : MonoBehaviour
 {
     protected string iName;
+    protected string iType;
 
     public string getName()
     {
@@ -14,5 +15,10 @@ public class Item : MonoBehaviour
     public void setName(string name)
     {
         this.iName = name;
+    }
+
+    public string getiType()
+    {
+        return iType;
     }
 }

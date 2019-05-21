@@ -19,6 +19,7 @@ public class Weapon : Item
         weaponName = n;
         iName = n;
         type = t;
+        iType = "Weapon";
         skill = s;
         atk = a;
         range = r;
