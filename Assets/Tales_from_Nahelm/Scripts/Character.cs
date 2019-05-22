@@ -346,6 +346,8 @@ public class Character : MonoBehaviour
                 //pujar el nivell ja que s'han superat els 100 punts d'experiencia
                 int[] rands = new int[8];
 
+                lvl++;
+
                 //Generar 8 aleatoris entre 1 i 100
                 for (int i = 0; i < 8; i++)
                 {
@@ -387,7 +389,7 @@ public class Character : MonoBehaviour
                 }
             }
         }
-        Debug.Log(charName + " LVL: " + lvl + " Exp: " + exp);
+        Debug.Log(charName + " LVL: " + lvl + " Exp: " + this.exp);
     }
 
     /*
@@ -422,6 +424,7 @@ public class Character : MonoBehaviour
                 actualPV += 10;
                 if (actualPV > pv) actualPV = pv;
                 used = true;
+                dropItem(i);
             }
         }
         return used;

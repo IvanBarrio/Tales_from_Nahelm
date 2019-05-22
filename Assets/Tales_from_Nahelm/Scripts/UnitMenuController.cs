@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class UnitMenuController : MonoBehaviour
 {
@@ -28,12 +29,23 @@ public class UnitMenuController : MonoBehaviour
     public bool selectedItem;
     public int sItem;
 
+    //Botons per al menu d'opcions
+    public GameObject cmdOptions;
+    public GameObject cmdHTP;
+    public GameObject cmdExit;
+    public GameObject cmdEndTurn;
+
+    public AudioSource source;
+    public AudioClip book;
+
+
     // Start is called before the first frame update
     void Start()
     {
         displayUnitMenu(false);
         displayWeaponMenu(false, 'I');
         displayItemUsage(false, 0);
+        displayPauseMenu(false);
     }
 
     // Update is called once per frame
@@ -50,7 +62,10 @@ public class UnitMenuController : MonoBehaviour
         GameController gc = GameObject.Find("GameController").GetComponent<GameController>();
         string selChar = gc.getSelectedCharacter();
 
-        GameObject.Find("UnitActionsPanel").GetComponent<Image>().enabled = show;
+        //source = GameObject.Find("SFXSource").GetComponent<AudioSource>();
+        source.PlayOneShot(book);
+
+        GameObject.Find("UnitActionsPanel").GetComponent<RawImage>().enabled = show;
         cmdMove.SetActive(show);
         cmdAttack.SetActive(show);
         cmdHeal.SetActive(show);
@@ -94,6 +109,10 @@ public class UnitMenuController : MonoBehaviour
     //Controles del menu de seleccion de armas
     public void displayWeaponMenu(bool show, char ent)
     {
+
+        //source = GameObject.Find("SFXSource").GetComponent<AudioSource>();
+        source.PlayOneShot(book);
+
         selectedItem = false;
         sItem = 9;
         
@@ -101,7 +120,7 @@ public class UnitMenuController : MonoBehaviour
         GameController gc = GameObject.Find("GameController").GetComponent<GameController>();
         string selChar = gc.getSelectedCharacter();
 
-        GameObject.Find("InventoryPanel").GetComponent<Image>().enabled = show;
+        GameObject.Find("UnitActionsPanel").GetComponent<RawImage>().enabled = show;
         cmdObj1.SetActive(show);
         cmdObj2.SetActive(show);
         cmdObj3.SetActive(show);
@@ -115,8 +134,6 @@ public class UnitMenuController : MonoBehaviour
                 gc.setTurnState('W');
                 gc.setMenuState(6);
             }
-            else if(ent == 'A')
-                gc.setTurnState('S');
 
             //Només mostrarem el nombre d'objectes que tingui el personatge seleccionat a l'inventari
             Item[] inventory = GameObject.Find(selChar).GetComponent<Character>().getInventory();
@@ -178,12 +195,16 @@ public class UnitMenuController : MonoBehaviour
 
     public void displayItemUsage(bool show, int nmbr)
     {
+
+        //source = GameObject.Find("SFXSource").GetComponent<AudioSource>();
+        source.PlayOneShot(book);
+
         if (!selectedItem) //Si no s'està seleccionan l'arma per atacar
         {
             GameController gc = GameObject.Find("GameController").GetComponent<GameController>();
             string selChar = gc.getSelectedCharacter();
 
-            GameObject.Find("UsagePanel").GetComponent<Image>().enabled = show;
+            GameObject.Find("UsagePanel").GetComponent<RawImage>().enabled = show;
             cmdUseEquip.SetActive(show);
             cmdDrop.SetActive(show);
 
@@ -200,6 +221,17 @@ public class UnitMenuController : MonoBehaviour
                 cmdUseEquip.GetComponent<TextMeshProUGUI>().text = "USE";
 
         }
+    }
+
+    public void displayPauseMenu(bool show)
+    {
+        //source = GameObject.Find("SFXSource").GetComponent<AudioSource>();
+        source.PlayOneShot(book);
+        GameObject.Find("PausePanel").GetComponent<RawImage>().enabled = show;
+        cmdOptions.SetActive(show);
+        cmdHTP.SetActive(show);
+        cmdExit.SetActive(show);
+        cmdEndTurn.SetActive(show);
     }
 
     /* 
@@ -297,6 +329,22 @@ public class UnitMenuController : MonoBehaviour
             displayItemUsage(true, sItem);
         }
         else
+        {
             gc.useItem(sItem);
+            displayWeaponMenu(false, 'X');
+        }
+    }
+
+    public void endT()
+    {
+        GameController gc = GameObject.Find("GameController").GetComponent<GameController>();
+        displayPauseMenu(false);
+        gc.endTurn();
+    }
+
+    public void exitGame()
+    {
+        // ToDo -> Mostrar mensaje de que se perdera todo lo hecho durante la partida al salir.
+        SceneManager.LoadScene(0);
     }
 }

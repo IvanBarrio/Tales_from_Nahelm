@@ -10,8 +10,8 @@ public class GameController : MonoBehaviour
     private int turn;                   //Comptador dels torns que s'han realitzat durant la partida (cada cop que passa el torn de l'enemic incrementa en 1
     private char actualTurn;            //Indicador de quin jugador té el torn actualment (P -> jugador | A -> inteligencia artificial)
     private int unitsToMove;            // Comptador de les unitats del jugador amb torn que falten per moure
-    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge ha acabat de moure, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial, W->En espera de la selecció d'acció sobre una unitat, B->Estat de batalla, S->Selecció d'arma per realitzar la batalla, P->Enemic confrimat i inici del combat, H->Curació) //S'ampliaran mes endevant
-    //I-C-A-G-T-D-W-B-S-P-H
+    private char turnState;             //Variable que ens controlara que pot fer el jugador (I-> Estat base e inicial, C-> El jugador ha seleccionat un personatge, A -> El personatge ha acabat de moure, G -> Game Over, T -> Mostrant el torn actual[no es poden realitzar accions durant aquest temps], D-> Dialeg inicial del joc on es realitza un petit tutorial, W->En espera de la selecció d'acció sobre una unitat, B->Estat de batalla, S->Selecció d'arma per realitzar la batalla, P->Enemic confrimat i inici del combat, H->Curació, U-> Menu de Pausa) //S'ampliaran mes endevant
+    //I-C-A-G-T-D-W-B-S-P-H-U
     private int menuState;              //Variable que controla en quin moment del menu ens trobem per poder tirar enrere accions
     private string selectedCharacter;   //Variable que ens indica quin personatge esta seleccionat en cas d'estar-ho, sino es trobara un valor vuit.
     Vector3 initialmovementPoint;
@@ -29,10 +29,6 @@ public class GameController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        /*
-         * Hay que generar los valores reales de las estadisticas de los personajes
-         */
-
         GameObject go;              //Variable que emprarem per generar els diferents objectes de les unitats
 
         GameObject.Find("UnitName").GetComponent<Text>().enabled = false;
@@ -137,7 +133,7 @@ public class GameController : MonoBehaviour
                 default:
                     //Hacer un generador aleatorio de diferentes tipos de unidades para los soldados / Que lo mire dependiendo de las armas que lleve
                     randomStats = getRandomSoldierStats();
-                    unit.GetComponent<Character>().createCharacter("Enemy", "Therthas Soldier", "Soldier", randomStats[0], randomStats[1], randomStats[2], randomStats[3], randomStats[4], randomStats[5], randomStats[6], randomStats[7], randomStats[8], randomStats[9]);
+                    unit.GetComponent<Character>().createCharacter("Enemy", "Terthas Soldier", "Soldier", randomStats[0], randomStats[1], randomStats[2], randomStats[3], randomStats[4], randomStats[5], randomStats[6], randomStats[7], randomStats[8], randomStats[9]);
                     randomWeapon = getRandomWeapon();
                     unit.GetComponent<Weapon>().setWeapon(randomWeapon[0], randomWeapon[1], randomWeapon[2], int.Parse(randomWeapon[3]), int.Parse(randomWeapon[4]), int.Parse(randomWeapon[5]), int.Parse(randomWeapon[6]));
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
@@ -145,7 +141,7 @@ public class GameController : MonoBehaviour
             }
         }
 
-        Debug.Log("Inicializamos Turnos!");
+        //Inicialitzem els torns
         turn = 1;
         actualTurn = 'P';
         turnState = 'D';
@@ -241,6 +237,15 @@ public class GameController : MonoBehaviour
                                 }
                             }
                         }
+                        //Si pulsem ESC sense tenir res activat mostrem el menu d'opcions
+                        if (Input.GetKey(KeyCode.Escape) && goBack)
+                        {
+                            goBack = false;
+                            turnState = 'T';
+                            timer = 0.5f;
+                            nextTurn = 'U';
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayPauseMenu(true);
+                        }
                         break;
                     //Personatge seleccionat i disponible per a moure
                     case 'C':
@@ -299,9 +304,9 @@ public class GameController : MonoBehaviour
                             goBack = false;
                             nextTurn = 'S';
                             turnState = 'T';
+                            timer = 0.5f;
                             menuState = 4;
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(true, 'A');
-                            timer = 0.5f;
                         }
                         else if (Input.GetMouseButtonDown(0))
                         {
@@ -351,8 +356,8 @@ public class GameController : MonoBehaviour
                                 menuState = 1;
                             else
                                 menuState = 3;
-                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(false, 'A');
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
                             GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
                             GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
                         }
@@ -486,8 +491,8 @@ public class GameController : MonoBehaviour
                                         menuState = 1;  //Si la unitat no s'ha mogut
                                     else
                                         menuState = 3;  //Si la unitat s'ha mogut
-                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
                                     GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(false, 'I');
+                                    GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
                                     break;
 
                                 case 7:
@@ -502,6 +507,18 @@ public class GameController : MonoBehaviour
                                     break;
 
                             }
+                        }
+                        break;
+                    case 'U':
+                        //estat del Menu de pausa
+                        if (Input.GetKey(KeyCode.Escape) && goBack)
+                        {
+                            //tornem a l'estat I si pulsem ESC en el menu de pausa
+                            goBack = false;
+                            turnState = 'T';
+                            timer = 0.5f;
+                            nextTurn = 'I';
+                            GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayPauseMenu(false);
                         }
                         break;
                 }
@@ -1047,6 +1064,7 @@ public class GameController : MonoBehaviour
 
         if (alive == 0)
         {
+            GameObject.Find("MusicControl").GetComponent<MusicControl>().playMusic(5);
             GameObject.Find("GAMEOVER").GetComponent<Text>().enabled = true;
             turnState = 'G';
             Debug.Log("GAME OVER, ja no et queden unitats per continuar.");
@@ -1106,6 +1124,7 @@ public class GameController : MonoBehaviour
         switch (actualTurn)
         {
             case 'P':
+                GameObject.Find("MusicControl").GetComponent<MusicControl>().playMusic(1);
                 GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " del jugador";
                 GameObject.Find("ActualTurn").GetComponent<Text>().text = "Player Turn";
                 GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.blue;
@@ -1113,6 +1132,7 @@ public class GameController : MonoBehaviour
                 unitsToMove = GameObject.FindGameObjectsWithTag("Ally").Length;
                 break;
             case 'A':
+                GameObject.Find("MusicControl").GetComponent<MusicControl>().playMusic(2);
                 GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " de la IA";
                 GameObject.Find("ActualTurn").GetComponent<Text>().text = "Enemy Turn";
                 GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.red;
@@ -1160,6 +1180,7 @@ public class GameController : MonoBehaviour
     {
         turnState = 'S';
         menuState = 4;
+        goBack = true;
     }
 
     /*
@@ -1167,6 +1188,7 @@ public class GameController : MonoBehaviour
      */
     public void endGameVictory()
     {
+        GameObject.Find("MusicControl").GetComponent<MusicControl>().playMusic(4);
         GameObject.Find("GAMEOVER").GetComponent<Text>().text = "VICTORY!";
         GameObject.Find("GAMEOVER").GetComponent<Text>().color = Color.blue;
         turnState = 'G';
@@ -1243,7 +1265,7 @@ public class GameController : MonoBehaviour
     {
         GameObject ally = GameObject.Find(name);
 
-        if (name == "Therthas Soldier") return false;
+        if (name == "Terthas Soldier") return false;
 
         if (ally.tag == "Ally")
             return true;
@@ -1375,5 +1397,15 @@ public class GameController : MonoBehaviour
             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayItemUsage(false, 0);
             deactivateUnit();
         }
+    }
+
+    public void endTurn()
+    {
+        flagIA = true;
+        actualTurn = 'A';
+        displayTurn();
+        unitsToMove = GameObject.FindGameObjectsWithTag("Enemy").Length;
+        timer = 5.0f;
+        turnState = 'T';
     }
 }

@@ -1,0 +1,21 @@
+Controles de la cámara:
+	Q y E -> Rotar la cámara
+	W, A, S, D -> Desplazar la cámara
+	Rueda del ratón -> Acercar - Alejar la cámara
+
+Controles del juego:
+	Esc -> Menú de pausa / Retroceder menú
+
+	Click Izquierdo del ratón -> Seleccionar personaje / Seleccionar opciones de los menús / Seleccionar enemigos
+
+Como Jugar
+	Una vez se inicie el turno del jugador puedes mover / atacar / usar objetos / esperar
+	Para atacar a un enemigo debes seleccionar el arma con la que vas a atacar y despues seleccionar al enemigo con un 
+		doble click.(Para cuando el combate sea definitivo el primer click te mostrará los valores de combate y
+			el segundo iniciará el combate)
+	Para realizar curas mágicas acerca a Ann a un aliado, selecciona MAGIC HEAL y selecciona el aliado a curar.
+	Para realizar curas con pociones ve a INVENTORY y selecciona VULNEARY -> USE (La pocion se gasta una vez se usa)
+	Puedes tirar objetos con el comando DROP en el INVENTORY.
+	
+	-Para ganar debes Seleccionar la opción TAKE del menú de acciones de los personajes, la cual aparece al derrotar al Boss
+	-Eres derrotado si matan a todas tus unidades
