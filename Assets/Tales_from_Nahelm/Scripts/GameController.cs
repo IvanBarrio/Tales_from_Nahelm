@@ -25,6 +25,8 @@ public class GameController : MonoBehaviour
     char nextTurn;
     bool playerUnitMissed;
     string whoIsAttacking;
+    Animator playerAnim;
+    Animator iaAnim;
 
     // Start is called before the first frame update
     void Start()
@@ -274,6 +276,8 @@ public class GameController : MonoBehaviour
                                 {
                                     GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().SetDestination(destination);
                                     GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().isStopped = false;
+                                    //Inicialitzem animació de moviment de la unitat
+                                    GameObject.Find(selectedCharacter).GetComponent<Character>().anim.SetBool("isMoving", true);
                                     turnState = 'A';
                                 }
                             }
@@ -283,7 +287,8 @@ public class GameController : MonoBehaviour
                     case 'A':
                         if (GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().remainingDistance < 0.1f) {
                             GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().isStopped = true;
-
+                            //Parem l'animació de moviment de la unitat
+                            GameObject.Find(selectedCharacter).GetComponent<Character>().anim.SetBool("isMoving", false);
                             GameObject.Find(selectedCharacter).GetComponent<Character>().setCanMove(false);
 
                             //Mostraremos otra vez el menú de unidad!!!
@@ -816,6 +821,7 @@ public class GameController : MonoBehaviour
             whoIsAttacking = "Ally";
         else
             whoIsAttacking = "Enemy";
+
         recIsDead = realizeAtack(starter, recieber);
         if (recIsDead)
         {
@@ -902,6 +908,9 @@ public class GameController : MonoBehaviour
         int reHP;
         string resText;                                                                 //Text que es mostrará amb els resultats de la batalla
 
+
+        //st.anim.SetBool("isAtacking", true);
+
         randV = Random.Range(1, 100);
         if (randV <= atckStats[2] && randV != 0)
         {
@@ -951,6 +960,9 @@ public class GameController : MonoBehaviour
         
         //Realitzar el dany a l'enemic
         reHP = re.recieveDamage(damageToEnemy);
+
+        //st.anim.SetBool("isAtacking", false);
+
         if (reHP == 0) isDead = true;
         return isDead;
     }

@@ -39,6 +39,7 @@ public class Character : MonoBehaviour
     private bool canMove;
     private bool isDead;
     private bool hasActions;
+    public Animator anim;
 
     //Funció inicialitzadora del personatge
     public void createCharacter(string tag, string cn, string cc, int pv, int str, int mag, int skl, int spd, int lck, int def, int res, int mov, int lvl)

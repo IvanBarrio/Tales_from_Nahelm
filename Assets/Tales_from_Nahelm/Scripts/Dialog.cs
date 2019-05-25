@@ -12,6 +12,7 @@ public class Dialog : MonoBehaviour
     private int index;
     public float typingSpeed;
     public GameObject continueButton;
+    public GameObject skipButton;
 
     //Portraits para el cambio de personaje en los dialogos
     public Texture blankP;
@@ -128,13 +129,19 @@ public class Dialog : MonoBehaviour
         }
         else
         {
-            textDisplay.text = "";
-            continueButton.SetActive(false);
-            GameObject.Find("DialogPanel").GetComponent<Image>().enabled = false;
-            GameObject.Find("GameController").GetComponent<GameController>().setTurnState('T');
-            GameObject.Find("Portrait").GetComponent<RawImage>().enabled = false;
-            GameObject.Find("Background").GetComponent<RawImage>().enabled = false;
+            Skip();
         }
+    }
+
+    public void Skip()
+    {
+        textDisplay.text = "";
+        textDisplay.enabled = false;
+        continueButton.SetActive(false);
+        GameObject.Find("DialogPanel").GetComponent<Image>().enabled = false;
+        GameObject.Find("GameController").GetComponent<GameController>().setTurnState('T');
+        GameObject.Find("Portrait").GetComponent<RawImage>().enabled = false;
+        GameObject.Find("Background").GetComponent<RawImage>().enabled = false;
     }
 
 }
