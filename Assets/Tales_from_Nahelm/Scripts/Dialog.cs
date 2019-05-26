@@ -138,6 +138,7 @@ public class Dialog : MonoBehaviour
         textDisplay.text = "";
         textDisplay.enabled = false;
         continueButton.SetActive(false);
+        skipButton.SetActive(false);
         GameObject.Find("DialogPanel").GetComponent<Image>().enabled = false;
         GameObject.Find("GameController").GetComponent<GameController>().setTurnState('T');
         GameObject.Find("Portrait").GetComponent<RawImage>().enabled = false;

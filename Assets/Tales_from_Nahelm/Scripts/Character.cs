@@ -41,6 +41,10 @@ public class Character : MonoBehaviour
     private bool hasActions;
     public Animator anim;
 
+    public GameObject sword;
+    public GameObject lance;
+    public GameObject axe;
+
     //Funció inicialitzadora del personatge
     public void createCharacter(string tag, string cn, string cc, int pv, int str, int mag, int skl, int spd, int lck, int def, int res, int mov, int lvl)
     {
@@ -103,6 +107,7 @@ public class Character : MonoBehaviour
     {
         equipedWeapon = w;
         inventory[0] = w;
+        showWeapon(w);
     }
 
     public void SetHasActions(bool hasActions)
@@ -123,6 +128,7 @@ public class Character : MonoBehaviour
     public void setEquipedWeapon(Weapon w)
     {
         equipedWeapon = w;
+        showWeapon(w);
     }
 
     //Getters
@@ -434,5 +440,33 @@ public class Character : MonoBehaviour
     public Weapon getWeaponInInventory(int i)
     {
         return (Weapon) inventory[i];
+    }
+
+    public void showWeapon(Weapon w)
+    {
+        if (w.getType() == "Sword")
+        {
+            sword.SetActive(true);
+            if (lance != null) lance.SetActive(false);
+            if (axe != null) axe.SetActive(false);
+        }
+        else if (w.getType() == "Lance")
+        {
+            lance.SetActive(true);
+            if (sword != null) sword.SetActive(false);
+            if (axe != null) axe.SetActive(false);
+        }
+        else if (w.getType() == "Axe")
+        {
+            axe.SetActive(true);
+            if (sword != null) sword.SetActive(false);
+            if (lance != null) lance.SetActive(false);
+        }
+        else
+        {
+            if (lance != null) lance.SetActive(false);
+            if (sword != null) sword.SetActive(false);
+            if (axe != null) axe.SetActive(false);
+        }
     }
 }

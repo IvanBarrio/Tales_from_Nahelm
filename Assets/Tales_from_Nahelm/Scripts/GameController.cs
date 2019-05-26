@@ -28,6 +28,13 @@ public class GameController : MonoBehaviour
     Animator playerAnim;
     Animator iaAnim;
 
+    int btlState;
+    int prevBtlState;
+    public bool nextBattle;
+    int atkmode;    //Variable que indicara qui realitzara el doble atac en cas de poder-se realitzar (1-> l'atacant, 2-> l'atacat, 0-> Cap d'ells)
+    bool dead;
+    bool returnToOrigin;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -150,6 +157,8 @@ public class GameController : MonoBehaviour
         selectedCharacter = "";
         menuState = 0;
         goBack = true;
+        nextBattle = true;
+        atkmode = 0;
     }
 
     // Update is called once per frame
@@ -326,6 +335,7 @@ public class GameController : MonoBehaviour
                                     {
                                         //Confirmem que se selecciona aquest enemic per atacar i comencem l'atac
                                         turnState = 'P';
+                                        btlState = 0;
                                     }
                                     else
                                     {
@@ -386,26 +396,151 @@ public class GameController : MonoBehaviour
                         break;
                     //Comença el combat contra l'enemic seleccionat
                     case 'P':
-                        turnState = 'I';
-                        int dead = combatTurn(GameObject.Find(selectedCharacter).GetComponent<Character>(), enemyTarget.GetComponent<Character>());
-                        switch (dead)
+
+                        if (nextBattle)
                         {
-                            case 1:
-                                Debug.Log(enemyTarget.name + " a matat a " + selectedCharacter + " en combat.");
-                                GameObject.Find(selectedCharacter).GetComponent<Character>().setIsDead(true);
-                                GameObject.Destroy(GameObject.Find(selectedCharacter));
-                                break;
-                            case 2:
-                                Debug.Log(selectedCharacter + " a matat a " + enemyTarget.name + " en combat.");
-                                enemyTarget.GetComponent<Character>().setIsDead(true);
-                                GameObject.Destroy(enemyTarget);
-                                break;
+                            //Comença el combat o segueix amb la següent acció
+                            switch (btlState)
+                            {
+                                case 0:
+                                    //inicialitzem les batalles
+                                    atkmode = 0;
+                                    prevBtlState = 0;
+                                    btlState = 1;
+                                    returnToOrigin = false;
+                                    if (GameObject.Find(selectedCharacter).GetComponent<Character>().getSpd() >= (enemyTarget.GetComponent<Character>().getSpd() + 5))
+                                    {
+                                        atkmode = 1;
+                                    }
+                                    else if (enemyTarget.GetComponent<Character>().getSpd() >= (GameObject.Find(selectedCharacter).GetComponent<Character>().getSpd() + 5))
+                                    {
+                                        atkmode = 2;
+                                    }
+                                    break;
+                                case 1:
+                                    //ataca la unitat aliada
+                                    dead = combatTurn(GameObject.Find(selectedCharacter).GetComponent<Character>(), enemyTarget.GetComponent<Character>());
+                                    playAttackAnimation(GameObject.Find(selectedCharacter).GetComponent<Character>());
+                                    btlState = 4;
+                                    prevBtlState = 1;
+                                    break;
+                                case 2:
+                                    dead = combatTurn(enemyTarget.GetComponent<Character>(), GameObject.Find(selectedCharacter).GetComponent<Character>());
+                                    playAttackAnimation(enemyTarget.GetComponent<Character>());
+                                    btlState = 4;
+                                    prevBtlState = 2;
+                                    break;
+                                case 3:
+                                    btlState = 4;
+                                    prevBtlState = 3;
+                                    if (atkmode == 1)
+                                    {
+                                        dead = combatTurn(GameObject.Find(selectedCharacter).GetComponent<Character>(), enemyTarget.GetComponent<Character>());
+                                        playAttackAnimation(GameObject.Find(selectedCharacter).GetComponent<Character>());
+                                        btlState = 4;
+                                        prevBtlState = 3;
+                                    }
+                                    else if (atkmode == 2)
+                                    {
+                                        dead = combatTurn(enemyTarget.GetComponent<Character>(), GameObject.Find(selectedCharacter).GetComponent<Character>());
+                                        playAttackAnimation(enemyTarget.GetComponent<Character>());
+                                        btlState = 4;
+                                        prevBtlState = 5;
+                                    }
+                                    else if (atkmode == 0)
+                                    {
+                                        nextBattle = false;
+                                    }
+                                    break;
+                                case 4:
+                                    //Comprobem si ha acabat la animació
+                                    
+                                    if (!returnToOrigin)
+                                    {
+                                        if (prevBtlState == 1 || prevBtlState == 3)
+                                        {
+                                            if (GameObject.Find(selectedCharacter).GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1)
+                                            {
+                                                GameObject.Find(selectedCharacter).GetComponent<Character>().anim.SetBool("isAttacking", false);
+                                                returnToOrigin = true;
+                                            }
+                                        }
+                                        else if (prevBtlState == 2 || prevBtlState == 5)
+                                        {
+                                            if (enemyTarget.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1)
+                                            {
+                                                enemyTarget.GetComponent<Character>().anim.SetBool("isAttacking", false);
+                                                returnToOrigin = true;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (prevBtlState == 1)
+                                        {
+                                            if (GameObject.Find(selectedCharacter).GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                            {
+                                                if (dead) nextBattle = false;
+                                                btlState = 2;
+                                                returnToOrigin = false;
+                                            }
+                                        }else if (prevBtlState == 2)
+                                        {
+                                            if (enemyTarget.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                            {
+                                                if (dead) nextBattle = false;
+                                                btlState = 3;
+                                                returnToOrigin = false;
+                                            }
+                                        }else if (prevBtlState == 3)
+                                        {
+                                            if (GameObject.Find(selectedCharacter).GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                            {
+                                                nextBattle = false;
+                                                returnToOrigin = false;
+                                            }
+                                        }
+                                        else if (prevBtlState == 5)
+                                        {
+                                            if (enemyTarget.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                            {
+                                                nextBattle = false;
+                                                returnToOrigin = false;
+                                            }
+                                        }
+
+                                    }
+                                    break;
+                            }
                         }
-                        checkUnits();
-                        GameObject.Find(selectedCharacter).GetComponent<Character>().SetHasActions(false);
-                        selectedCharacter = "";
-                        enemyTarget = null;
-                        disableUnit();
+                        else
+                        {
+                            turnState = 'I';
+                            if (dead)
+                            {
+                                switch (prevBtlState)
+                                {
+                                    case 1:
+                                    case 3:
+                                        enemyTarget.GetComponent<Character>().setIsDead(true);
+                                        GameObject.Destroy(enemyTarget);
+                                        break;
+                                    case 2:
+                                    case 5:
+                                        GameObject.Find(selectedCharacter).GetComponent<Character>().setIsDead(true);
+                                        GameObject.Destroy(GameObject.Find(selectedCharacter));
+                                        break;
+                                }
+                            }
+                            checkUnits();
+                            GameObject.Find(selectedCharacter).GetComponent<Character>().SetHasActions(false);
+                            selectedCharacter = "";
+                            enemyTarget = null;
+                            btlState = 0;
+                            nextBattle = true;
+                            disableUnit();
+                        }
+                        
                         break;
                     //Curem a un aliat amb màgia
                     case 'H':
@@ -588,6 +723,7 @@ public class GameController : MonoBehaviour
                                         selAICharacter.GetComponent<NavMeshAgent>().SetDestination(destination);
                                         selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance = 4;   //Fem que es quedi a una distancia prudencial de la unitat enemiga
                                         selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
+                                        selAICharacter.GetComponent<Character>().anim.SetBool("isMoving", true);
                                         isNotMoving = false;
                                     }
                                     else if (Vector3.Distance(destination, selAICharacter.transform.position) > 50 || selAICharacter.name == "Omak")// Si la unitat es troba a molta distancia de les unitats aliades o es el cap no es mouran
@@ -599,6 +735,7 @@ public class GameController : MonoBehaviour
                                         selAICharacter.GetComponent<NavMeshAgent>().SetDestination(destination);
                                         selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance = (Vector3.Distance(destination, selAICharacter.transform.position) - 20);   //Fem que es quedi a una distancia prudencial de la unitat enemiga
                                         selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
+                                        selAICharacter.GetComponent<Character>().anim.SetBool("isMoving", true);
                                         isNotMoving = false;
                                     }
                                 }
@@ -618,6 +755,7 @@ public class GameController : MonoBehaviour
                                 {
                                     flagIA = false;
                                     selAICharacter.GetComponent<NavMeshAgent>().isStopped = true;
+                                    selAICharacter.GetComponent<Character>().anim.SetBool("isMoving", false);
                                     GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); 
 
                                     bool rangedEn = false;
@@ -637,34 +775,163 @@ public class GameController : MonoBehaviour
                                                 i++;
                                         } while (hiEs == false && i < en.Length);
 
-                                        if (hiEs == false && i == en.Length) i = 0;  //Si l'enemic seleccionat no es troba dins de la llista atacara al primer que trobi a rang
+                                        if (hiEs == false && i == en.Length) enemyTarget = en[0];  //Si l'enemic seleccionat no es troba dins de la llista atacara al primer que trobi a rang
 
-                                        Debug.Log("Es pot atacar a un enemic!");
-                                        Debug.Log(selAICharacter.name + " es disposa a atacar a " + en[i].name);
-                                        int dead = combatTurn(selAICharacter.GetComponent<Character>(), en[i].GetComponent<Character>());
-                                        switch (dead)
-                                        {
-                                            case 1:
-                                                Debug.Log(en[i].name + " a matat a " + selAICharacter.name + " en combat.");
-                                                selAICharacter.GetComponent<Character>().setIsDead(true);
-                                                GameObject.Destroy(selAICharacter);
-                                                break;
-                                            case 2:
-                                                Debug.Log(selAICharacter.name + " a matat a " + en[i].name + " en combat.");
-                                                en[0].GetComponent<Character>().setIsDead(true);
-                                                GameObject.Destroy(en[i]);
-                                                break;
-                                        }
-                                        checkUnits();
+                                        turnState = 'P';
+                                        nextBattle = true;
+                                        btlState = 0;
                                     }
                                     else
                                     {
-                                        Debug.Log("No hi ha enemics a prop.");
+                                        enemyTarget = null;
+                                        isNotMoving = false;
+                                        disableUnit();
                                     }
-                                    enemyTarget = null;
-                                    isNotMoving = false;
-                                    disableUnit();
                                 }
+                            }
+                            break;
+                        case 'P':
+                            if (nextBattle)
+                            {
+                                //Comença el combat o segueix amb la següent acció
+                                switch (btlState)
+                                {
+                                    case 0:
+                                        //inicialitzem les batalles
+                                        atkmode = 0;
+                                        prevBtlState = 0;
+                                        btlState = 1;
+                                        returnToOrigin = false;
+                                        if (selAICharacter.GetComponent<Character>().getSpd() >= (enemyTarget.GetComponent<Character>().getSpd() + 5))
+                                        {
+                                            atkmode = 1;
+                                        }
+                                        else if (enemyTarget.GetComponent<Character>().getSpd() >= (selAICharacter.GetComponent<Character>().getSpd() + 5))
+                                        {
+                                            atkmode = 2;
+                                        }
+                                        break;
+                                    case 1:
+                                        //ataca la unitat ia
+                                        dead = combatTurn(selAICharacter.GetComponent<Character>(), enemyTarget.GetComponent<Character>());
+                                        playAttackAnimation(selAICharacter.GetComponent<Character>());
+                                        btlState = 4;
+                                        prevBtlState = 1;
+                                        break;
+                                    case 2:
+                                        dead = combatTurn(enemyTarget.GetComponent<Character>(), selAICharacter.GetComponent<Character>());
+                                        playAttackAnimation(enemyTarget.GetComponent<Character>());
+                                        btlState = 4;
+                                        prevBtlState = 2;
+                                        break;
+                                    case 3:
+                                        btlState = 4;
+                                        prevBtlState = 3;
+                                        if (atkmode == 1)
+                                        {
+                                            dead = combatTurn(selAICharacter.GetComponent<Character>(), enemyTarget.GetComponent<Character>());
+                                            playAttackAnimation(selAICharacter.GetComponent<Character>());
+                                            btlState = 4;
+                                            prevBtlState = 3;
+                                        }
+                                        else if (atkmode == 2)
+                                        {
+                                            dead = combatTurn(enemyTarget.GetComponent<Character>(), selAICharacter.GetComponent<Character>());
+                                            playAttackAnimation(enemyTarget.GetComponent<Character>());
+                                            btlState = 4;
+                                            prevBtlState = 5;
+                                        }
+                                        else if (atkmode == 0)
+                                        {
+                                            nextBattle = false;
+                                        }
+                                        break;
+                                    case 4:
+                                        //Comprobem si ha acabat la animació
+
+                                        if (!returnToOrigin)
+                                        {
+                                            if (prevBtlState == 1 || prevBtlState == 3)
+                                            {
+                                                if (selAICharacter.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1)
+                                                {
+                                                    selAICharacter.GetComponent<Character>().anim.SetBool("isAttacking", false);
+                                                    returnToOrigin = true;
+                                                }
+                                            }
+                                            else if (prevBtlState == 2 || prevBtlState == 5)
+                                            {
+                                                if (enemyTarget.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 1)
+                                                {
+                                                    enemyTarget.GetComponent<Character>().anim.SetBool("isAttacking", false);
+                                                    returnToOrigin = true;
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (prevBtlState == 1)
+                                            {
+                                                if (selAICharacter.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                                {
+                                                    if (dead) nextBattle = false;
+                                                    btlState = 2;
+                                                    returnToOrigin = false;
+                                                }
+                                            }
+                                            else if (prevBtlState == 2)
+                                            {
+                                                if (enemyTarget.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                                {
+                                                    if (dead) nextBattle = false;
+                                                    btlState = 3;
+                                                    returnToOrigin = false;
+                                                }
+                                            }
+                                            else if (prevBtlState == 3)
+                                            {
+                                                if (selAICharacter.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                                {
+                                                    nextBattle = false;
+                                                    returnToOrigin = false;
+                                                }
+                                            }
+                                            else if (prevBtlState == 5)
+                                            {
+                                                if (enemyTarget.GetComponent<Character>().anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                                                {
+                                                    nextBattle = false;
+                                                    returnToOrigin = false;
+                                                }
+                                            }
+
+                                        }
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                if (dead)
+                                {
+                                    switch (prevBtlState)
+                                    {
+                                        case 1:
+                                        case 3:
+                                            enemyTarget.GetComponent<Character>().setIsDead(true);
+                                            GameObject.Destroy(enemyTarget);
+                                            break;
+                                        case 2:
+                                            selAICharacter.GetComponent<Character>().setIsDead(true);
+                                            GameObject.Destroy(selAICharacter);
+                                            break;
+                                    }
+                                }
+                                checkUnits();
+                                enemyTarget = null;
+                                isNotMoving = false;
+                                btlState = 0;
+                                nextBattle = true;
+                                disableUnit();
                             }
                             break;
                     }
@@ -795,25 +1062,11 @@ public class GameController : MonoBehaviour
     /*
      * Crear una función para la ejecucion de los combates entre 2 personajes
      */
-    public int combatTurn(Character starter, Character recieber)
+    public bool combatTurn(Character starter, Character recieber)
     {
-        // Mes endevant podrem trobar més opcions depenent de les armes que portin equipades de moment no es contempla
-
-        //ToDo-> contar con las animaciones de batalla
-
-        int atkmode = 0;    //Variable que indicara qui realitzara el doble atac en cas de poder-se realitzar (1-> l'atacant, 2-> l'atacat, 0-> Cap d'ells)
+        
         bool recIsDead = false;
-        playerUnitMissed = false;
-
-        if (starter.getSpd() >= (recieber.getSpd() + 5))
-        {
-            atkmode = 1;
-        }
-        else if (recieber.getSpd() >= (starter.getSpd() + 5))
-        {
-            atkmode = 2;
-        }
-
+        
         playerUnitMissed = true;
 
         //Ataca l'atacant
@@ -829,72 +1082,12 @@ public class GameController : MonoBehaviour
             {
                 starter.lvlUp(experienceGainedInBattle(starter, recieber, recIsDead, playerUnitMissed));
             }
-            return 2;
+            return true;
         }
-        //Ataca l'atacat
-        if (isAnAlly(recieber.getCharName()))
-            whoIsAttacking = "Ally";
-        else
-            whoIsAttacking = "Enemy";
-        recIsDead = realizeAtack(recieber, starter);
-        if (recIsDead)
-        {
-            if (whoIsAttacking == "Ally")
-            {
-                recieber.lvlUp(experienceGainedInBattle(recieber, starter, recIsDead, playerUnitMissed));
-            }
-            return 1;
-        }
-
-        switch (atkmode)
-        {
-            case 1:
-                if (isAnAlly(starter.getCharName()))
-                    whoIsAttacking = "Ally";
-                else
-                    whoIsAttacking = "Enemy";
-                recIsDead = realizeAtack(starter, recieber);
-                if (recIsDead)
-                {
-                    if (whoIsAttacking == "Ally")
-                    {
-                        starter.lvlUp(experienceGainedInBattle(starter, recieber, recIsDead, playerUnitMissed));
-                    }
-                    return 2;
-                }
-                break;
-            case 2:
-                if (isAnAlly(recieber.getCharName()))
-                    whoIsAttacking = "Ally";
-                else
-                    whoIsAttacking = "Enemy";
-                recIsDead = realizeAtack(recieber, starter);
-                if (recIsDead)
-                {
-                    if (whoIsAttacking == "Ally")
-                    {
-                        recieber.lvlUp(experienceGainedInBattle(recieber, starter, recIsDead, playerUnitMissed));
-                    }
-                    return 1;
-                }
-                break;
-        }
-        if (isAnAlly(starter.getCharName()))
-            whoIsAttacking = "Ally";
-        else
-            whoIsAttacking = "Enemy";
-        if (whoIsAttacking == "Ally")
-        {
-            starter.lvlUp(experienceGainedInBattle(starter, recieber, recIsDead, playerUnitMissed));
-        }
-        else
-        {
-            recieber.lvlUp(experienceGainedInBattle(recieber, starter, recIsDead, playerUnitMissed));
-        }
-
+        
         whoIsAttacking = "";
 
-        return 0;
+        return false;
     }
 
     public bool realizeAtack(Character st, Character re)
@@ -907,10 +1100,7 @@ public class GameController : MonoBehaviour
         int damageToEnemy = 0;
         int reHP;
         string resText;                                                                 //Text que es mostrará amb els resultats de la batalla
-
-
-        //st.anim.SetBool("isAtacking", true);
-
+        
         randV = Random.Range(1, 100);
         if (randV <= atckStats[2] && randV != 0)
         {
@@ -961,8 +1151,6 @@ public class GameController : MonoBehaviour
         //Realitzar el dany a l'enemic
         reHP = re.recieveDamage(damageToEnemy);
 
-        //st.anim.SetBool("isAtacking", false);
-
         if (reHP == 0) isDead = true;
         return isDead;
     }
@@ -972,19 +1160,22 @@ public class GameController : MonoBehaviour
      */
     public GameObject findUnitWithClosestThreads()
     {
-        //De moment passarem qualsevol unitat que estigui activa
         GameObject[] units = GameObject.FindGameObjectsWithTag("Enemy");
 
         GameObject un = null;
         int i = 0;
-
         do
         {
-            if (units[i].GetComponent<Character>().gethasActions())
-                un = units[i];
+            if (units[i] != null)
+            {
+                if (units[i].GetComponent<Character>().gethasActions())
+                    un = units[i];
+                else
+                    i++;
+            }
             else
                 i++;
-        } while (un == null);
+        } while (un == null && i < units.Length );
         return un;
     }
 
@@ -1353,9 +1544,9 @@ public class GameController : MonoBehaviour
     {
         string[] weapon = new string[7];
 
-        switch (Random.Range(1, 3))
+        switch (Random.Range(0, 3))
         {
-            case 1:
+            case 0:
                 //Generem una espasa
                 weapon[0] = "Steel Sword";
                 weapon[1] = "Sword";
@@ -1365,7 +1556,7 @@ public class GameController : MonoBehaviour
                 weapon[5] = "90";
                 weapon[6] = "0";
                 break;
-            case 2:
+            case 1:
                 //Generem una llança
                 weapon[0] = "Steel Lance";
                 weapon[1] = "Lance";
@@ -1375,7 +1566,7 @@ public class GameController : MonoBehaviour
                 weapon[5] = "80";
                 weapon[6] = "0";
                 break;
-            case 3:
+            case 2:
                 //Generem una destral
                 weapon[0] = "Steel Axe";
                 weapon[1] = "Axe";
@@ -1413,6 +1604,7 @@ public class GameController : MonoBehaviour
 
     public void endTurn()
     {
+        activateUnits("Enemy");
         flagIA = true;
         actualTurn = 'A';
         displayTurn();
@@ -1420,4 +1612,29 @@ public class GameController : MonoBehaviour
         timer = 5.0f;
         turnState = 'T';
     }
+
+    public void playAttackAnimation(Character st)
+    {
+        if (st.getCharName() == "Ann" || st.getCharName() == "Terthas Soldier")
+        {
+            switch (st.getSelWeapon().getType())
+            {
+                case "Sword":
+                    st.anim.SetBool("isUsingSword", true);
+                    break;
+                case "Lance":
+                    st.anim.SetBool("isUsingLance", true);
+                    break;
+                case "Axe":
+                    st.anim.SetBool("isUsingAxe", true);
+                    break;
+                case "Magic":
+                    st.anim.SetBool("isUsingMagic", true);
+                    break;
+            }
+        }
+        st.anim.SetBool("isAttacking", true);
+
+    }
+
 }
