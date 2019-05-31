@@ -305,8 +305,6 @@ public class GameController : MonoBehaviour
                             menuState = 3;
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
 
-                            GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
-
                             GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
                         }
                         break;
@@ -373,7 +371,7 @@ public class GameController : MonoBehaviour
                                 menuState = 3;
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayWeaponMenu(false, 'A');
                             GameObject.Find("UnitActions").GetComponent<UnitMenuController>().displayUnitMenu(true);
-                            GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
+                            GameObject.Find("AtackArea").transform.position = new Vector3(371, GameObject.Find("AtackArea").transform.position.y, 88);
                             GameObject.Find("MovementArea").transform.position = new Vector3(371, GameObject.Find("MovementArea").transform.position.y, 88);
                         }
                         else
@@ -408,6 +406,9 @@ public class GameController : MonoBehaviour
                                     prevBtlState = 0;
                                     btlState = 1;
                                     returnToOrigin = false;
+                                    GameObject.Find("AtackArea").transform.position = new Vector3(371, GameObject.Find("AtackArea").transform.position.y, 88);
+                                    GameObject.Find(selectedCharacter).transform.LookAt(enemyTarget.transform.position);
+                                    enemyTarget.transform.LookAt(GameObject.Find(selectedCharacter).transform.position);
                                     if (GameObject.Find(selectedCharacter).GetComponent<Character>().getSpd() >= (enemyTarget.GetComponent<Character>().getSpd() + 5))
                                     {
                                         atkmode = 1;
@@ -580,6 +581,7 @@ public class GameController : MonoBehaviour
                                         //Si l'aliat seleccionat es troba a rang i necessita curacions
                                         if (isInRange && GameObject.Find(hit.collider.name).GetComponent<Character>().isInjured())
                                         {
+                                            GameObject.Find(selectedCharacter).transform.LookAt(GameObject.Find(hit.collider.name).transform.position);
                                             GameObject.Find(hit.collider.name).GetComponent<Character>().heal(GameObject.Find(selectedCharacter).GetComponent<Character>().magicHealing());
                                             checkUnits();
                                             GameObject.Find(selectedCharacter).GetComponent<Character>().SetHasActions(false);
@@ -592,7 +594,7 @@ public class GameController : MonoBehaviour
                             }
                         }
                         break;
-                    //Esperem a alguna acció del jugador
+                        //Esperem a alguna acció del jugador
                     case 'W':
                         if (Input.GetKey(KeyCode.Escape) && goBack)
                         {
@@ -798,6 +800,8 @@ public class GameController : MonoBehaviour
                                 {
                                     case 0:
                                         //inicialitzem les batalles
+                                        selAICharacter.transform.LookAt(enemyTarget.transform.position);
+                                        enemyTarget.transform.LookAt(selAICharacter.transform.position);
                                         atkmode = 0;
                                         prevBtlState = 0;
                                         btlState = 1;
@@ -921,6 +925,7 @@ public class GameController : MonoBehaviour
                                             GameObject.Destroy(enemyTarget);
                                             break;
                                         case 2:
+                                        case 5:
                                             selAICharacter.GetComponent<Character>().setIsDead(true);
                                             GameObject.Destroy(selAICharacter);
                                             break;
@@ -1363,6 +1368,7 @@ public class GameController : MonoBehaviour
      */
     public void deactivateUnit()
     {
+        GameObject.Find("AtackArea").transform.position = new Vector3(371, GameObject.Find("AtackArea").transform.position.y, 88);
         turnState = 'I';
         disableUnit();
     }
@@ -1381,6 +1387,7 @@ public class GameController : MonoBehaviour
      */
     public void selectWeaponToAttack()
     {
+        GameObject.Find("AtackArea").transform.position = new Vector3(GameObject.Find(selectedCharacter).transform.position.x, GameObject.Find("AtackArea").transform.position.y, GameObject.Find(selectedCharacter).transform.position.z);
         turnState = 'S';
         menuState = 4;
         goBack = true;

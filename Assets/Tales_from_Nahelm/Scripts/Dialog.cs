@@ -8,7 +8,11 @@ public class Dialog : MonoBehaviour
 {
 
     public TextMeshProUGUI textDisplay;
+    public TextMeshProUGUI defeatTextDisplay;
+    public TextMeshProUGUI victoryTextDisplay;
     public string[] sentences;
+    public string[] defeatSentences;
+    public string[] victorySentences;
     private int index;
     public float typingSpeed;
     public GameObject continueButton;

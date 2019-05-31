@@ -6994,6 +6994,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e5526bf4ea956f4198663eee4f1b861, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  nextBattle: 0
 --- !u!1 &420173156
 GameObject:
   m_ObjectHideFlags: 0
@@ -17375,6 +17376,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   textDisplay: {fileID: 1035179046}
+  defeatTextDisplay: {fileID: 0}
+  victoryTextDisplay: {fileID: 0}
   sentences:
   - Nahelm, a great continent plagued by constant wars.
   - Two of the countries that have long been at war are Ardgar and Terthas.
@@ -17420,6 +17423,8 @@ MonoBehaviour:
   - 'Ann: Thank you, thank you very much.'
   - 'Niva: Go guys!'
   - 'Rest of mercenaries: YES !!!'
+  defeatSentences: []
+  victorySentences: []
   typingSpeed: 0.02
   continueButton: {fileID: 1970616249}
   skipButton: {fileID: 180293720}
@@ -20509,7 +20514,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1046251945}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 371.0435, y: 1.48, z: 87.2}
+  m_LocalPosition: {x: 371.0435, y: -0.09, z: 87.2}
   m_LocalScale: {x: 7, y: 0.16362, z: 7}
   m_Children: []
   m_Father: {fileID: 0}
