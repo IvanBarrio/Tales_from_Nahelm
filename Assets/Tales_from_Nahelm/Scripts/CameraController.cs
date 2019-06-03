@@ -21,7 +21,7 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'D' && GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'W')
+        if (GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'D' && GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'W' && GameObject.Find("GameController").GetComponent<GameController>().getTurnState() != 'U')
         {
             //Codi per moure la camara
             Vector3 p = GetBaseInput();
@@ -62,19 +62,19 @@ public class CameraController : MonoBehaviour
         Vector3 p_Velocity = new Vector3();
         if (Input.GetKey(KeyCode.W))
         {
-            p_Velocity += new Vector3(0, 0, 1);
+            if ((transform.position.z)+1 <= 317f) p_Velocity += new Vector3(0, 0, 1);
         }
         if (Input.GetKey(KeyCode.S))
         {
-            p_Velocity += new Vector3(0, 0, -1);
+            if ((transform.position.z) - 1 >= 200f) p_Velocity += new Vector3(0, 0, -1);
         }
         if (Input.GetKey(KeyCode.A))
         {
-            p_Velocity += new Vector3(-1, 0, 0);
+            if ((transform.position.x) - 1 >= 259f) p_Velocity += new Vector3(-1, 0, 0);
         }
         if (Input.GetKey(KeyCode.D))
         {
-            p_Velocity += new Vector3(1, 0, 0);
+            if ((transform.position.x) + 1 <= 398f) p_Velocity += new Vector3(1, 0, 0);
         }
 
         return p_Velocity;

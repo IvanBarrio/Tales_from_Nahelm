@@ -10,13 +10,20 @@ public class Dialog : MonoBehaviour
     public TextMeshProUGUI textDisplay;
     public TextMeshProUGUI defeatTextDisplay;
     public TextMeshProUGUI victoryTextDisplay;
+    public TextMeshProUGUI tutorialTextDisplay;
     public string[] sentences;
     public string[] defeatSentences;
     public string[] victorySentences;
+    public string[] tutorialSentences;
     private int index;
+    private int deathIndex;
+    private int victoryIndex;
+    private int tutorialIndex;
     public float typingSpeed;
     public GameObject continueButton;
     public GameObject skipButton;
+
+    public int whosDying;
 
     //Portraits para el cambio de personaje en los dialogos
     public Texture blankP;
@@ -65,76 +72,82 @@ public class Dialog : MonoBehaviour
         }
     }
 
-    public void NextSentence() {
+    public void NextSentence()
+    {
 
         continueButton.SetActive(false);
-
-        if (index < sentences.Length - 1)
+        if (textDisplay.enabled == true)
         {
-            index++;
-            switch (index)
+            if (index < sentences.Length - 1)
             {
-                case 0:
-                case 1:
-                case 2:
-                case 5:
-                case 7:
-                case 9:
-                case 18:
-                case 28:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = blankP;
-                    break;
-                case 3:
-                case 11:
-                case 13:
-                case 15:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = baagulP;
-                    break;
-                case 4:
-                case 10:
-                case 12:
-                case 14:
-                case 16:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = omakP;
-                    break;
-                case 6:
-                case 19:
-                case 21:
-                case 26:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = annP;
-                    break;
-                case 8:
-                case 20:
-                case 25:
-                case 27:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = nivaP;
-                    break;
-                case 17:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = ardsedeP;
-                    break;
-                case 22:
-                case 24:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = akiP;
-                    break;
-                case 23:
-                    GameObject.Find("Portrait").GetComponent<RawImage>().texture = hildaP;
-                    break;
+                index++;
+                switch (index)
+                {
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 5:
+                    case 7:
+                    case 9:
+                    case 18:
+                    case 28:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = blankP;
+                        break;
+                    case 3:
+                    case 11:
+                    case 13:
+                    case 15:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = baagulP;
+                        break;
+                    case 4:
+                    case 10:
+                    case 12:
+                    case 14:
+                    case 16:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = omakP;
+                        break;
+                    case 6:
+                    case 19:
+                    case 21:
+                    case 26:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = annP;
+                        break;
+                    case 8:
+                    case 20:
+                    case 25:
+                    case 27:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = nivaP;
+                        break;
+                    case 17:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = ardsedeP;
+                        break;
+                    case 22:
+                    case 24:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = akiP;
+                        break;
+                    case 23:
+                        GameObject.Find("Portrait").GetComponent<RawImage>().texture = hildaP;
+                        break;
+                }
+                if (index == 0 || index == 2)
+                    GameObject.Find("Background").GetComponent<RawImage>().texture = map;
+                else if (index == 1)
+                    GameObject.Find("Background").GetComponent<RawImage>().texture = battle;
+                else if (index >= 9 && index <= 17)
+                    GameObject.Find("Background").GetComponent<RawImage>().texture = postInterior;
+                else
+                    GameObject.Find("Background").GetComponent<RawImage>().texture = post;
+                textDisplay.text = "";
+                StartCoroutine(Type());
             }
-            if (index == 0 || index == 2)
-                GameObject.Find("Background").GetComponent<RawImage>().texture = map;
-            else if(index == 1)
-                GameObject.Find("Background").GetComponent<RawImage>().texture = battle;
-            else if(index >= 9 && index <= 17)
-                GameObject.Find("Background").GetComponent<RawImage>().texture = postInterior;
             else
-                GameObject.Find("Background").GetComponent<RawImage>().texture = post;
-            textDisplay.text = "";
-            StartCoroutine(Type());
+            {
+                Skip();
+            }
         }
-        else
-        {
-            Skip();
-        }
+        else if (defeatTextDisplay.enabled == true) {
+        } else if (victoryTextDisplay.enabled == true) {
+        } else if (tutorialTextDisplay.enabled == true) { }
     }
 
     public void Skip()
