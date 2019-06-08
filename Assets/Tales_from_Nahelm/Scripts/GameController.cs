@@ -45,14 +45,11 @@ public class GameController : MonoBehaviour
         GameObject.Find("ActualLive").GetComponent<Text>().enabled = false;
         GameObject.Find("TotalLive").GetComponent<Text>().enabled = false;
         GameObject.Find("GAMEOVER").GetComponent<Text>().enabled = false;
-        GameObject.Find("TurnShow").GetComponent<Text>().enabled = false;
         GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
 
         int[] randomStats = new int[10];
         string[] randomWeapon = new string[7];
 
-        Debug.Log("Empezamos!");
-        Debug.Log("Inicializamos aliados!");
         GameObject[] alies = GameObject.FindGameObjectsWithTag("Ally");
         Item staff = new Item();
         staff.setName("Staff");
@@ -118,7 +115,6 @@ public class GameController : MonoBehaviour
             }
         }
 
-        Debug.Log("Inicializamos enemigos!");
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
 
         foreach (GameObject unit in enemies)
@@ -197,6 +193,12 @@ public class GameController : MonoBehaviour
                 {
                     GameObject.Find("ActualTurn").GetComponent<Text>().enabled = false;
                     turnState = 'I';
+                    if (actualTurn == 'P' && turn == 1)
+                    {
+                        //Inicialitzem el tutorial en cas de ser el primer torn
+                        turnState = 'D';
+                        GameObject.Find("DialogManager").GetComponent<Dialog>().iniTutorial();
+                    }
                 }
                 else
                 {
@@ -524,11 +526,15 @@ public class GameController : MonoBehaviour
                                     case 1:
                                     case 3:
                                         enemyTarget.GetComponent<Character>().setIsDead(true);
+                                        turnState = 'D';
+                                        GameObject.Find("DialogManager").GetComponent<Dialog>().iniDeath(enemyTarget.GetComponent<Character>());
                                         GameObject.Destroy(enemyTarget);
                                         break;
                                     case 2:
                                     case 5:
                                         GameObject.Find(selectedCharacter).GetComponent<Character>().setIsDead(true);
+                                        turnState = 'D';
+                                        GameObject.Find("DialogManager").GetComponent<Dialog>().iniDeath(GameObject.Find(selectedCharacter).GetComponent<Character>());
                                         GameObject.Destroy(GameObject.Find(selectedCharacter));
                                         break;
                                 }
@@ -922,11 +928,15 @@ public class GameController : MonoBehaviour
                                         case 1:
                                         case 3:
                                             enemyTarget.GetComponent<Character>().setIsDead(true);
+                                            turnState = 'D';
+                                            GameObject.Find("DialogManager").GetComponent<Dialog>().iniDeath(enemyTarget.GetComponent<Character>());
                                             GameObject.Destroy(enemyTarget);
                                             break;
                                         case 2:
                                         case 5:
                                             selAICharacter.GetComponent<Character>().setIsDead(true);
+                                            turnState = 'D';
+                                            GameObject.Find("DialogManager").GetComponent<Dialog>().iniDeath(selAICharacter.GetComponent<Character>());
                                             GameObject.Destroy(selAICharacter);
                                             break;
                                     }
@@ -1328,12 +1338,10 @@ public class GameController : MonoBehaviour
 
     public void displayTurn()
     {
-        GameObject.Find("TurnShow").GetComponent<Text>().enabled = true;
         switch (actualTurn)
         {
             case 'P':
                 GameObject.Find("MusicControl").GetComponent<MusicControl>().playMusic(1);
-                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " del jugador";
                 GameObject.Find("ActualTurn").GetComponent<Text>().text = "Player Turn";
                 GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.blue;
                 Debug.Log("Turno " + turn + " del jugador");
@@ -1341,7 +1349,6 @@ public class GameController : MonoBehaviour
                 break;
             case 'A':
                 GameObject.Find("MusicControl").GetComponent<MusicControl>().playMusic(2);
-                GameObject.Find("TurnShow").GetComponent<Text>().text = "Turno " + turn + " de la IA";
                 GameObject.Find("ActualTurn").GetComponent<Text>().text = "Enemy Turn";
                 GameObject.Find("ActualTurn").GetComponent<Text>().color = Color.red;
                 Debug.Log("Turno " + turn + " de la IA");
@@ -1399,9 +1406,7 @@ public class GameController : MonoBehaviour
     public void endGameVictory()
     {
         GameObject.Find("MusicControl").GetComponent<MusicControl>().playMusic(4);
-        GameObject.Find("GAMEOVER").GetComponent<Text>().text = "VICTORY!";
-        GameObject.Find("GAMEOVER").GetComponent<Text>().color = Color.blue;
-        turnState = 'G';
+        GameObject.Find("DialogManager").GetComponent<Dialog>().iniVictory();
     }
 
     /*

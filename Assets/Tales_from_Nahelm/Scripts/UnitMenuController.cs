@@ -120,7 +120,7 @@ public class UnitMenuController : MonoBehaviour
         GameController gc = GameObject.Find("GameController").GetComponent<GameController>();
         string selChar = gc.getSelectedCharacter();
 
-        GameObject.Find("UnitActionsPanel").GetComponent<RawImage>().enabled = show;
+        GameObject.Find("InventoryPanel").GetComponent<RawImage>().enabled = show;
         cmdObj1.SetActive(show);
         cmdObj2.SetActive(show);
         cmdObj3.SetActive(show);
@@ -205,6 +205,7 @@ public class UnitMenuController : MonoBehaviour
             string selChar = gc.getSelectedCharacter();
 
             GameObject.Find("UsagePanel").GetComponent<RawImage>().enabled = show;
+            GameObject.Find("DropPanel").GetComponent<RawImage>().enabled = show;
             cmdUseEquip.SetActive(show);
             cmdDrop.SetActive(show);
 
@@ -228,6 +229,7 @@ public class UnitMenuController : MonoBehaviour
         //source = GameObject.Find("SFXSource").GetComponent<AudioSource>();
         source.PlayOneShot(book);
         GameObject.Find("PausePanel").GetComponent<RawImage>().enabled = show;
+        GameObject.Find("PauseLabel").GetComponent<Text>().enabled = show;
         cmdOptions.SetActive(show);
         cmdHTP.SetActive(show);
         cmdExit.SetActive(show);
