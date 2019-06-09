@@ -30,13 +30,17 @@ public class UnitMenuController : MonoBehaviour
     public int sItem;
 
     //Botons per al menu d'opcions
-    public GameObject cmdOptions;
     public GameObject cmdHTP;
     public GameObject cmdExit;
     public GameObject cmdEndTurn;
+    public GameObject cmdMusic;
+    public GameObject cmdSFX;
 
     public AudioSource source;
     public AudioClip book;
+
+    public Texture check;
+    public Texture notCheck;
 
 
     // Start is called before the first frame update
@@ -62,7 +66,6 @@ public class UnitMenuController : MonoBehaviour
         GameController gc = GameObject.Find("GameController").GetComponent<GameController>();
         string selChar = gc.getSelectedCharacter();
 
-        //source = GameObject.Find("SFXSource").GetComponent<AudioSource>();
         source.PlayOneShot(book);
 
         GameObject.Find("UnitActionsPanel").GetComponent<RawImage>().enabled = show;
@@ -70,7 +73,6 @@ public class UnitMenuController : MonoBehaviour
         cmdAttack.SetActive(show);
         cmdHeal.SetActive(show);
         cmdInv.SetActive(show);
-        cmdTrade.SetActive(show);
         cmdWait.SetActive(show);
         cmdTake.SetActive(show);
 
@@ -86,12 +88,7 @@ public class UnitMenuController : MonoBehaviour
                cmdAttack.SetActive(false);
 
             GameObject[] al = gc.getAliesInRange(GameObject.Find(selChar).transform.position, 4f, GameObject.Find(selChar).tag); //El rang que es passa sera el rang que tingui l'arma d'atac
-            if (al[0] == null)
-            {//Sempre retorna com a minim la unitat que busca, per tant com a minim la longitud ha de ser de 2
-                //L'intercanvi només es pot donar si te aliats a rang
-                cmdTrade.SetActive(false);
-            }
-            else
+            if (al[0] != null)
             {
                 //Comprobar si la unidat pot curar a algú si el te a rang
                 if (al[0] == GameObject.Find(selChar) || !GameObject.Find(selChar).GetComponent<Character>().canHeal())
@@ -230,11 +227,23 @@ public class UnitMenuController : MonoBehaviour
         source.PlayOneShot(book);
         GameObject.Find("PausePanel").GetComponent<RawImage>().enabled = show;
         GameObject.Find("PauseLabel").GetComponent<Text>().enabled = show;
-        cmdOptions.SetActive(show);
-        cmdHTP.SetActive(show);
+        
         cmdExit.SetActive(show);
         cmdEndTurn.SetActive(show);
-    }
+
+        cmdMusic.SetActive(show);
+        cmdSFX.SetActive(show);
+        GameObject.Find("MusicLabel").GetComponent<Text>().enabled = show;
+        if (GameObject.Find("GameController").GetComponent<GameController>().music)
+            cmdMusic.GetComponent<RawImage>().texture = check;
+        else
+            cmdMusic.GetComponent<RawImage>().texture = notCheck;
+        GameObject.Find("SFXLabel").GetComponent<Text>().enabled = show;
+        if (GameObject.Find("GameController").GetComponent<GameController>().sfx)
+            cmdSFX.GetComponent<RawImage>().texture = check;
+        else
+            cmdSFX.GetComponent<RawImage>().texture = notCheck;
+}
 
     /* 
      * Funció que inicia la fase de moviment d'una unitat seleccionada
@@ -349,4 +358,41 @@ public class UnitMenuController : MonoBehaviour
         // ToDo -> Mostrar mensaje de que se perdera todo lo hecho durante la partida al salir.
         SceneManager.LoadScene(0);
     }
+
+    public void controlMusic()
+    {
+        if (GameObject.Find("GameController").GetComponent<GameController>().music)
+        {
+            //Deshabilitar
+            GameObject.Find("GameController").GetComponent<GameController>().music = false;
+            cmdMusic.GetComponent<RawImage>().texture = notCheck;
+            GameObject.Find("MusicControl").GetComponent<MusicControl>().mSource.volume = 0;
+        }
+        else
+        {
+            //Habilitar
+            GameObject.Find("GameController").GetComponent<GameController>().music = true;
+            cmdMusic.GetComponent<RawImage>().texture = check;
+            GameObject.Find("MusicControl").GetComponent<MusicControl>().mSource.volume = 1;
+        }
+    }
+
+    public void controlSFX()
+    {
+        if (GameObject.Find("GameController").GetComponent<GameController>().sfx)
+        {
+            //Deshabilitar
+            GameObject.Find("GameController").GetComponent<GameController>().sfx = false;
+            cmdSFX.GetComponent<RawImage>().texture = notCheck;
+            source.volume = 0;
+        }
+        else
+        {
+            //Habilitar
+            GameObject.Find("GameController").GetComponent<GameController>().sfx = true;
+            cmdSFX.GetComponent<RawImage>().texture = check;
+            source.volume = 1;
+        }
+    }
+
 }

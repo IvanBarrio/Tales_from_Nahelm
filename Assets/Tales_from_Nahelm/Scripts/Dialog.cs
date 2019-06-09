@@ -376,13 +376,17 @@ public class Dialog : MonoBehaviour
                 index = 99;
                 break;
         }
-        if (index < 99)
+        if (index < 10)
         {
             GameObject.Find("DialogPanel").GetComponent<Image>().enabled = true;
             GameObject.Find("Portrait").GetComponent<RawImage>().enabled = true;
             defeatTextDisplay.text = "";
             defeatTextDisplay.enabled = true;
             StartCoroutine(Type());
+        }
+        else
+        {
+            GameObject.Find("GameController").GetComponent<GameController>().setTurnState('I');
         }
     }
 

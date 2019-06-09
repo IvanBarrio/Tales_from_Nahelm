@@ -35,17 +35,30 @@ public class GameController : MonoBehaviour
     bool dead;
     bool returnToOrigin;
 
+    public bool music;
+    public bool sfx;
+
+    public Texture sword;
+    public Texture lance;
+    public Texture axe;
+    public Texture magic;
+
+    public AudioClip footstep;
+    public AudioClip combat;
+    public AudioClip magiccast;
+
     // Start is called before the first frame update
     void Start()
     {
         GameObject go;              //Variable que emprarem per generar els diferents objectes de les unitats
 
-        GameObject.Find("UnitName").GetComponent<Text>().enabled = false;
-        GameObject.Find("Live").GetComponent<Text>().enabled = false;
-        GameObject.Find("ActualLive").GetComponent<Text>().enabled = false;
-        GameObject.Find("TotalLive").GetComponent<Text>().enabled = false;
         GameObject.Find("GAMEOVER").GetComponent<Text>().enabled = false;
-        GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
+        GameObject.Find("UnitInfo").GetComponent<RawImage>().enabled = false;
+        GameObject.Find("UnitInfo1").GetComponent<RawImage>().enabled = false;
+        GameObject.Find("UnitInfo2").GetComponent<RawImage>().enabled = false;
+        GameObject.Find("WeaponInfo").GetComponent<RawImage>().enabled = false;
+        GameObject.Find("HPBar").GetComponent<RawImage>().enabled = false;
+        GameObject.Find("HPInfo").GetComponent<RawImage>().enabled = false;
 
         int[] randomStats = new int[10];
         string[] randomWeapon = new string[7];
@@ -128,7 +141,7 @@ public class GameController : MonoBehaviour
                     break;
                 case "Ardsede":
                     unit.GetComponent<Character>().createCharacter("Enemy", "Ardsede", "Sorcerer", 24, 4, 8, 4, 6, 3, 8, 7, 20, 6);
-                    unit.GetComponent<Weapon>().setWeapon("Shadows", "BlackMagic", "C", 4, 2, 60, 50);
+                    unit.GetComponent<Weapon>().setWeapon("Shadows", "Magic", "C", 4, 2, 60, 50);
                     unit.GetComponent<Character>().setWeapon(unit.GetComponent<Weapon>());
                     go = new GameObject("ArdsedeStaff");
                     go.AddComponent<Item>().setName("Staff");
@@ -155,6 +168,7 @@ public class GameController : MonoBehaviour
         goBack = true;
         nextBattle = true;
         atkmode = 0;
+        showInfo("", 1, false);
     }
 
     // Update is called once per frame
@@ -165,23 +179,12 @@ public class GameController : MonoBehaviour
          */
         if (selectedCharacter != null && selectedCharacter != "")
         {
-            GameObject.Find("UnitName").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getCharName(); ;
-            GameObject.Find("ActualLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getActualPV().ToString();
-            GameObject.Find("TotalLive").GetComponent<Text>().text = GameObject.Find(selectedCharacter).GetComponent<Character>().getPV().ToString();
-            GameObject.Find("UnitInfo").GetComponent<Image>().enabled = true;
-            GameObject.Find("TotalLive").GetComponent<Text>().enabled = true;
-            GameObject.Find("UnitName").GetComponent<Text>().enabled = true;
-            GameObject.Find("Live").GetComponent<Text>().enabled = true;
-            GameObject.Find("ActualLive").GetComponent<Text>().enabled = true;
-            GameObject.Find("TotalLive").GetComponent<Text>().enabled = true;
+            showInfo(selectedCharacter, 0, true);
+            if (GameObject.Find("EnemyInfo").GetComponent<RawImage>().enabled) showInfo(enemyTarget.name, 1, true);
         }
         else
         {
-            GameObject.Find("UnitName").GetComponent<Text>().enabled = false;
-            GameObject.Find("Live").GetComponent<Text>().enabled = false;
-            GameObject.Find("ActualLive").GetComponent<Text>().enabled = false;
-            GameObject.Find("TotalLive").GetComponent<Text>().enabled = false;
-            GameObject.Find("UnitInfo").GetComponent<Image>().enabled = false;
+            if (actualTurn == 'P') showInfo("", 0, false);
         }
 
         if (turnState == 'T')
@@ -290,15 +293,22 @@ public class GameController : MonoBehaviour
                                     //Inicialitzem animació de moviment de la unitat
                                     GameObject.Find(selectedCharacter).GetComponent<Character>().anim.SetBool("isMoving", true);
                                     turnState = 'A';
+                                    GameObject.Find("SFXSource").GetComponent<AudioSource>().loop = true;
+                                    GameObject.Find("SFXSource").GetComponent<AudioSource>().clip = footstep;
+                                    GameObject.Find("SFXSource").GetComponent<AudioSource>().Play();
                                 }
                             }
                         }
                         break;
                     //Personatge mogut i amb possibilitat d'atacar
                     case 'A':
-                        if (GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().remainingDistance < 0.1f) {
+                        if (GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().remainingDistance < 0.2f) {
                             GameObject.Find(selectedCharacter).GetComponent<NavMeshAgent>().isStopped = true;
                             //Parem l'animació de moviment de la unitat
+
+                            GameObject.Find("SFXSource").GetComponent<AudioSource>().loop = false;
+                            GameObject.Find("SFXSource").GetComponent<AudioSource>().Stop();
+
                             GameObject.Find(selectedCharacter).GetComponent<Character>().anim.SetBool("isMoving", false);
                             GameObject.Find(selectedCharacter).GetComponent<Character>().setCanMove(false);
 
@@ -315,6 +325,7 @@ public class GameController : MonoBehaviour
                         if (Input.GetKey(KeyCode.Escape) && menuState == 5 && goBack)
                         {
                             //Si ens trobem en la seleccio d'enemic tornem a la seleccio d'arma
+                            showInfo("", 1, false);
                             goBack = false;
                             nextTurn = 'S';
                             turnState = 'T';
@@ -352,6 +363,7 @@ public class GameController : MonoBehaviour
                                         if (isInRange)
                                         {
                                             enemyTarget = GameObject.Find(hit.collider.name);
+                                            showInfo(enemyTarget.name, 1, true);
                                         }
                                     }
                                 }
@@ -466,6 +478,7 @@ public class GameController : MonoBehaviour
                                             {
                                                 GameObject.Find(selectedCharacter).GetComponent<Character>().anim.SetBool("isAttacking", false);
                                                 returnToOrigin = true;
+                                                GameObject.Find("SFXSource").GetComponent<AudioSource>().PlayOneShot(combat);
                                             }
                                         }
                                         else if (prevBtlState == 2 || prevBtlState == 5)
@@ -474,6 +487,7 @@ public class GameController : MonoBehaviour
                                             {
                                                 enemyTarget.GetComponent<Character>().anim.SetBool("isAttacking", false);
                                                 returnToOrigin = true;
+                                                GameObject.Find("SFXSource").GetComponent<AudioSource>().PlayOneShot(combat);
                                             }
                                         }
                                     }
@@ -519,6 +533,7 @@ public class GameController : MonoBehaviour
                         else
                         {
                             turnState = 'I';
+                            showInfo("", 1, false);
                             if (dead)
                             {
                                 switch (prevBtlState)
@@ -587,6 +602,7 @@ public class GameController : MonoBehaviour
                                         //Si l'aliat seleccionat es troba a rang i necessita curacions
                                         if (isInRange && GameObject.Find(hit.collider.name).GetComponent<Character>().isInjured())
                                         {
+                                            GameObject.Find("SFXSource").GetComponent<AudioSource>().PlayOneShot(magiccast);
                                             GameObject.Find(selectedCharacter).transform.LookAt(GameObject.Find(hit.collider.name).transform.position);
                                             GameObject.Find(hit.collider.name).GetComponent<Character>().heal(GameObject.Find(selectedCharacter).GetComponent<Character>().magicHealing());
                                             checkUnits();
@@ -733,6 +749,9 @@ public class GameController : MonoBehaviour
                                         selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
                                         selAICharacter.GetComponent<Character>().anim.SetBool("isMoving", true);
                                         isNotMoving = false;
+                                        GameObject.Find("SFXSource").GetComponent<AudioSource>().loop = true;
+                                        GameObject.Find("SFXSource").GetComponent<AudioSource>().clip = footstep;
+                                        GameObject.Find("SFXSource").GetComponent<AudioSource>().Play();
                                     }
                                     else if (Vector3.Distance(destination, selAICharacter.transform.position) > 50 || selAICharacter.name == "Omak")// Si la unitat es troba a molta distancia de les unitats aliades o es el cap no es mouran
                                     {
@@ -745,6 +764,9 @@ public class GameController : MonoBehaviour
                                         selAICharacter.GetComponent<NavMeshAgent>().isStopped = false;
                                         selAICharacter.GetComponent<Character>().anim.SetBool("isMoving", true);
                                         isNotMoving = false;
+                                        GameObject.Find("SFXSource").GetComponent<AudioSource>().loop = true;
+                                        GameObject.Find("SFXSource").GetComponent<AudioSource>().clip = footstep;
+                                        GameObject.Find("SFXSource").GetComponent<AudioSource>().Play();
                                     }
                                 }
                                 turnState = 'A';
@@ -762,6 +784,10 @@ public class GameController : MonoBehaviour
                                 if (Vector3.Distance(destination, selAICharacter.transform.position) <= selAICharacter.GetComponent<NavMeshAgent>().stoppingDistance || isNotMoving)
                                 {
                                     flagIA = false;
+
+                                    GameObject.Find("SFXSource").GetComponent<AudioSource>().loop = true;
+                                    GameObject.Find("SFXSource").GetComponent<AudioSource>().Stop();
+
                                     selAICharacter.GetComponent<NavMeshAgent>().isStopped = true;
                                     selAICharacter.GetComponent<Character>().anim.SetBool("isMoving", false);
                                     GameObject[] en = getEnemiesInRange(selAICharacter.transform.position, 4f, selAICharacter.tag); 
@@ -807,7 +833,9 @@ public class GameController : MonoBehaviour
                                     case 0:
                                         //inicialitzem les batalles
                                         selAICharacter.transform.LookAt(enemyTarget.transform.position);
+                                        showInfo(selAICharacter.name, 0, true);
                                         enemyTarget.transform.LookAt(selAICharacter.transform.position);
+                                        showInfo(enemyTarget.name, 1, true);
                                         atkmode = 0;
                                         prevBtlState = 0;
                                         btlState = 1;
@@ -867,6 +895,7 @@ public class GameController : MonoBehaviour
                                                 {
                                                     selAICharacter.GetComponent<Character>().anim.SetBool("isAttacking", false);
                                                     returnToOrigin = true;
+                                                    GameObject.Find("SFXSource").GetComponent<AudioSource>().PlayOneShot(combat);
                                                 }
                                             }
                                             else if (prevBtlState == 2 || prevBtlState == 5)
@@ -875,6 +904,7 @@ public class GameController : MonoBehaviour
                                                 {
                                                     enemyTarget.GetComponent<Character>().anim.SetBool("isAttacking", false);
                                                     returnToOrigin = true;
+                                                    GameObject.Find("SFXSource").GetComponent<AudioSource>().PlayOneShot(combat);
                                                 }
                                             }
                                         }
@@ -921,6 +951,8 @@ public class GameController : MonoBehaviour
                             }
                             else
                             {
+                                showInfo("", 0, false);
+                                showInfo("", 1, false);
                                 if (dead)
                                 {
                                     switch (prevBtlState)
@@ -1647,6 +1679,132 @@ public class GameController : MonoBehaviour
         }
         st.anim.SetBool("isAttacking", true);
 
+    }
+
+    public void showInfo(string character, int pos, bool show)
+    {
+        if (pos == 0)
+        {
+            if (show)
+            {
+                GameObject.Find("UnitInfo").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("UnitInfo1").GetComponent<RawImage>().enabled = true;
+                switch (character)
+                {
+                    case "Niva":
+                        GameObject.Find("UnitInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().nivaP;
+                        break;
+                    case "Aki":
+                        GameObject.Find("UnitInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().akiP;
+                        break;
+                    case "Hilda":
+                        GameObject.Find("UnitInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().hildaP;
+                        break;
+                    case "Ann":
+                        GameObject.Find("UnitInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().annP;
+                        break;
+                    case "Omak":
+                        GameObject.Find("UnitInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().omakP;
+                        break;
+                    case "Ardsede":
+                        GameObject.Find("UnitInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().ardsedeP;
+                        break;
+                    default:
+                        GameObject.Find("UnitInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().soldierP;
+                        break;
+                }
+                GameObject.Find("UnitInfo2").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("WeaponInfo").GetComponent<RawImage>().enabled = true;
+                switch (GameObject.Find(character).GetComponent<Character>().getEquipedWeapon().getType())
+                {
+                    case "Sword":
+                        GameObject.Find("WeaponInfo").GetComponent<RawImage>().texture = sword;
+                        break;
+                    case "Lance":
+                        GameObject.Find("WeaponInfo").GetComponent<RawImage>().texture = lance;
+                        break;
+                    case "Axe":
+                        GameObject.Find("WeaponInfo").GetComponent<RawImage>().texture = axe;
+                        break;
+                    case "Magic":
+                        GameObject.Find("WeaponInfo").GetComponent<RawImage>().texture = magic;
+                        break;
+                }
+                GameObject.Find("HPBar").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("HPInfo").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("HPInfo").GetComponent<HealthBarController>().reduceHP(GameObject.Find(character).GetComponent<Character>().getPV(), GameObject.Find(character).GetComponent<Character>().getActualPV());
+            }
+            else
+            {
+                GameObject.Find("UnitInfo").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("UnitInfo1").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("UnitInfo2").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("WeaponInfo").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("HPBar").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("HPInfo").GetComponent<RawImage>().enabled = false;
+            }
+        }
+        else
+        {
+            if (show)
+            {
+                GameObject.Find("EnemyInfo").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("EnemyInfo1").GetComponent<RawImage>().enabled = true;
+                switch (character)
+                {
+                    case "Niva":
+                        GameObject.Find("EnemyInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().nivaP;
+                        break;
+                    case "Aki":
+                        GameObject.Find("EnemyInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().akiP;
+                        break;
+                    case "Hilda":
+                        GameObject.Find("EnemyInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().hildaP;
+                        break;
+                    case "Ann":
+                        GameObject.Find("EnemyInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().annP;
+                        break;
+                    case "Omak":
+                        GameObject.Find("EnemyInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().omakP;
+                        break;
+                    case "Ardsede":
+                        GameObject.Find("EnemyInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().ardsedeP;
+                        break;
+                    default:
+                        GameObject.Find("EnemyInfo1").GetComponent<RawImage>().texture = GameObject.Find("DialogManager").GetComponent<Dialog>().soldierP;
+                        break;
+                }
+                GameObject.Find("EnemyInfo2").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("WeaponInfo2").GetComponent<RawImage>().enabled = true;
+                switch (GameObject.Find(character).GetComponent<Character>().getEquipedWeapon().getType())
+                {
+                    case "Sword":
+                        GameObject.Find("WeaponInfo2").GetComponent<RawImage>().texture = sword;
+                        break;
+                    case "Lance":
+                        GameObject.Find("WeaponInfo2").GetComponent<RawImage>().texture = lance;
+                        break;
+                    case "Axe":
+                        GameObject.Find("WeaponInfo2").GetComponent<RawImage>().texture = axe;
+                        break;
+                    case "Magic":
+                        GameObject.Find("WeaponInfo2").GetComponent<RawImage>().texture = magic;
+                        break;
+                }
+                GameObject.Find("EnemyBar").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("HPEnemy").GetComponent<RawImage>().enabled = true;
+                GameObject.Find("HPEnemy").GetComponent<HealthBarController>().reduceHP(GameObject.Find(character).GetComponent<Character>().getPV(), GameObject.Find(character).GetComponent<Character>().getActualPV());
+            }
+            else
+            {
+                GameObject.Find("EnemyInfo").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("EnemyInfo1").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("EnemyInfo2").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("WeaponInfo2").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("EnemyBar").GetComponent<RawImage>().enabled = false;
+                GameObject.Find("HPEnemy").GetComponent<RawImage>().enabled = false;
+            }
+        }
     }
 
 }
